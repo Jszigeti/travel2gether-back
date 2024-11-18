@@ -14,8 +14,18 @@ model User {
   status                UserStatus                @default(NOT_VERIFIED)
   createdAt             DateTime                  @map("created_at") @default(now())
   updatedAt             DateTime                  @map("updated_at") @updatedAt
-  profile               Profile?            
-}   
+  profile               Profile?
+  token                 Token?           
+}
+
+model Token {
+  id                    Int                       @id @default(autoincrement())
+  userId                Int                       @map("user_id") @unique
+  user                  User                      @relation(fields: [userId], references: [id])
+  refresh_token         String?
+  verification_token    String?
+  reset_token           String?
+}
 
 model Profile {   
   userId                Int                       @id @map("user_id")
