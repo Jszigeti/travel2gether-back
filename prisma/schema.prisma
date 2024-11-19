@@ -15,24 +15,29 @@ model User {
   createdAt             DateTime                  @map("created_at") @default(now())
   updatedAt             DateTime                  @map("updated_at") @updatedAt
   profile               Profile?
-  token                 Token?           
+  tokens                Token[]           
 }
 
 model Token {
   id                    Int                       @id @default(autoincrement())
-  userId                Int                       @map("user_id") @unique
+  userId                Int                       @map("user_id")
   user                  User                      @relation(fields: [userId], references: [id])
-  refresh_token         String?
-  verification_token    String?
-  reset_token           String?
+  token                 String                    @unique
+  type                  TokenType
+}
+
+enum TokenType {
+  REFRESH
+  VERIFICATION
+  RESET_PASSWORD
 }
 
 model Profile {   
   userId                Int                       @id @map("user_id")
   firstname             String                    @db.VarChar(30)
   lastname              String                    @db.VarChar(30)
-  birthdate             String                    @db.VarChar(10)
-  gender                Gender                    @default(OTHER) 
+  birthdate             String?                   @db.VarChar(10)
+  gender                Gender?                   @default(OTHER) 
   pathPicture           String?                   @map("path_picture") @db.VarChar(255)
   description           String?                   @db.VarChar(2000)
   budget                Budget?       
@@ -41,7 +46,7 @@ model Profile {
   createdAt             DateTime                  @map("created_at") @default(now())
   updatedAt             DateTime                  @map("updated_at") @updatedAt
   user                  User                      @relation(fields: [userId], references: [id])
-  travelTypes           ProfileTravelTypes[]  
+  travelTypes           ProfileTravelTypes[] 
   lodgings              ProfileLodgings[]         
   interests             ProfileInterests[]        
   languages             ProfileLanguages[]        
