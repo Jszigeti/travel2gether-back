@@ -1,68 +1,100 @@
-import { Injectable } from '@nestjs/common';
-import { Token, TokenType, User } from '@prisma/client';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { Token, TokenType, User, UserStatus } from '@prisma/client';
+import { SigninDto } from './dtos/signin.dto';
+import { v4 as uuidv4 } from 'uuid';
+import * as bcrypt from 'bcrypt';
+import { expiredAtDateGenerator } from 'utils/expiredAtDateGenerator';
 
 @Injectable()
 export class AuthService {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async create(createAuthDto: {
-    email: string;
-    password: string;
-  }): Promise<User> {
+  async createUser(createAuthDto: SigninDto): Promise<User> {
     return this.prismaService.user.create({ data: createAuthDto });
   }
 
-  // findAll() {
-  //   return `This action returns all auth`;
-  // }
+  async checkUserStatus(userStatus: UserStatus, userId: number): Promise<void> {
+    if (userStatus === UserStatus.BANNED)
+      throw new UnauthorizedException('User banned');
+    if (userStatus === UserStatus.NOT_VERIFIED) {
+      // Generate verification token and save it in DB
+      const verificationToken = uuidv4();
+      await this.updateToken(
+        userId,
+        await bcrypt.hash(verificationToken, 10), // Hash verification token
+        TokenType.VERIFICATION,
+      );
+      // Send mail with verification token and userId
+      // ...
+      throw new UnauthorizedException(
+        'User not verified, please check your mails',
+      );
+    }
+  }
 
-  // findOne(id: number) {
-  //   return `This action returns a #${id} auth`;
-  // }
-
-  // update(id: number, updateAuthDto: UpdateAuthDto) {
-  //   return `This action updates a #${id} auth`;
-  // }
-
-  // remove(id: number) {
-  //   return `This action removes a #${id} auth`;
-  // }
-
-  // TOKEN FUNCTIONS
+  // Token functions
   async saveToken(
     userId: number,
     token: string,
     type: TokenType,
   ): Promise<Token> {
-    return this.prismaService.token.create({ data: { userId, token, type } });
+    return this.prismaService.token.create({
+      data: { userId, token, type, expiredAt: expiredAtDateGenerator() },
+    });
   }
 
-  async updateToken(id: number, token: string): Promise<Token> {
+  async updateToken(
+    userId: number,
+    token: string,
+    type: TokenType,
+  ): Promise<Token> {
     return this.prismaService.token.update({
       where: {
-        id,
+        userId_type: {
+          userId,
+          type,
+        },
       },
       data: {
         token,
+        expiredAt: expiredAtDateGenerator(),
       },
     });
   }
 
   async findToken(userId: number, type: TokenType): Promise<Token> {
-    const token = await this.prismaService.token.findFirst({
-      where: {
-        AND: {
-          userId,
-          type,
-        },
-      },
+    return this.prismaService.token.findUnique({
+      where: { userId_type: { userId, type } },
     });
-    return token;
   }
 
-  async deleteToken(id: number): Promise<string> {
-    await this.prismaService.token.delete({ where: { id } });
+  async deleteToken(userId: number, type: TokenType): Promise<string> {
+    await this.prismaService.token.delete({
+      where: { userId_type: { userId, type } },
+    });
     return 'Token deleted';
+  }
+
+  async hashAndSaveToken(
+    token: string,
+    userId: number,
+    type: TokenType,
+  ): Promise<void> {
+    if (await this.findToken(userId, type)) {
+      await this.updateToken(userId, await bcrypt.hash(token, 10), type);
+    } else {
+      await this.saveToken(userId, await bcrypt.hash(token, 10), type);
+    }
+  }
+
+  async checkIfTokenExpired(savedToken: Token, type: TokenType) {
+    if (new Date() > savedToken.expiredAt) {
+      const token = uuidv4();
+      await this.hashAndSaveToken(token, savedToken.userId, type);
+      // Send mail with token and userId
+      // ...
+      throw new UnauthorizedException();
+    }
   }
 }

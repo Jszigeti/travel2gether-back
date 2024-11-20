@@ -19,11 +19,14 @@ model User {
 }
 
 model Token {
-  id                    Int                       @id @default(autoincrement())
   userId                Int                       @map("user_id")
   user                  User                      @relation(fields: [userId], references: [id])
   token                 String                    @unique
   type                  TokenType
+  expiredAt             DateTime                  @map("expired_at")
+  createdAt             DateTime                  @map("created_at") @default(now())
+  updatedAt             DateTime                  @map("updated_at") @updatedAt
+  @@id([userId, type])  
 }
 
 enum TokenType {
