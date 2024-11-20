@@ -145,7 +145,7 @@ export class AuthController {
       TokenType.VERIFICATION,
     );
     // Compare tokens
-    if (!bcrypt.compare(savedToken.token, verificationToken))
+    if (!(await bcrypt.compare(verificationToken, savedToken.token)))
       throw new UnauthorizedException();
     // Edit user status
     await this.usersService.editUserStatus(
@@ -197,10 +197,13 @@ export class AuthController {
       TokenType.RESET_PASSWORD,
     );
     // Compare tokens
-    if (!bcrypt.compare(savedToken.token, passwordResetToken))
+    if (!(await bcrypt.compare(passwordResetToken, savedToken.token)))
       throw new UnauthorizedException();
     // Edit user password
-    await this.usersService.resetUserPassword(savedToken.userId, body.password);
+    await this.usersService.resetUserPassword(
+      savedToken.userId,
+      await bcrypt.hash(body.password, 10),
+    );
     // Return success message
     return 'Password reset successfully';
   }
