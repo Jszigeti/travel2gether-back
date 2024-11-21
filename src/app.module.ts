@@ -11,6 +11,7 @@ import { RatingsModule } from './ratings/ratings.module';
 import { MessagesModule } from './messages/messages.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ConfigModule } from '@nestjs/config';
+import { EmailModule } from './email/email.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { ConfigModule } from '@nestjs/config';
     RatingsModule,
     MessagesModule,
     PrismaModule,
+    EmailModule,
   ],
 })
 export class AppModule {}

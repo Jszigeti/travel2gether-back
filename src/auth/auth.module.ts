@@ -5,10 +5,12 @@ import { UsersModule } from 'src/users/users.module';
 import { JwtModule } from '@nestjs/jwt';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthGuard } from './guards/auth.guard';
+import { EmailModule } from 'src/email/email.module';
 
 @Module({
   imports: [
     UsersModule,
+    EmailModule,
     JwtModule.register({
       global: true,
       secret: process.env.SECRET_KEY,

@@ -8,6 +8,7 @@ import {
   Req,
   Patch,
   ParseIntPipe,
+  Get,
 } from '@nestjs/common';
 import { Request } from 'express';
 import { AuthService } from './auth.service';
@@ -18,8 +19,9 @@ import { v4 as uuidv4 } from 'uuid';
 import { Public } from './decorators/public.decorator';
 import { SigninDto } from './dtos/signin.dto';
 import { SignupDto } from './dtos/signup.dto';
-import { Profile, TokenType, UserStatus } from '@prisma/client';
+import { TokenType, User, UserStatus } from '@prisma/client';
 import { UserIdWithTokens } from './interfaces/UserIdWithTokens';
+import { EmailService } from 'src/email/email.service';
 
 @Controller()
 export class AuthController {
@@ -27,19 +29,20 @@ export class AuthController {
     private readonly authService: AuthService,
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
+    private readonly emailService: EmailService,
   ) {}
 
   @Public()
   @Post('signup')
-  async signup(@Body() body: SignupDto): Promise<Profile> {
+  async signup(@Body() body: SignupDto): Promise<User> {
     // Body destructuring
-    const { email, firstname, lastname, password } = body;
+    const { email, password } = body;
     // Check if email already exists
     if (await this.usersService.findUser({ email }))
       throw new ConflictException('Email already exists');
-    // Password hash and create user
-    const user = await this.authService.createUser({
-      email,
+    // Hash password and create user with profile
+    const user = await this.authService.createUserWithProfile({
+      ...body,
       password: await bcrypt.hash(password, 10),
     });
     // Generate verification token, hash and save it in DB
@@ -49,14 +52,10 @@ export class AuthController {
       user.id,
       TokenType.VERIFICATION,
     );
-    // Send mail with verification token and userId
-    // ...
-    // Create profile
-    return await this.usersService.createProfile({
-      userId: user.id,
-      firstname,
-      lastname,
-    });
+    // Send confirmation mail
+    await this.emailService.sendMail(email, verificationToken, user.id);
+    // Return user
+    return user;
   }
 
   @Public()
@@ -127,7 +126,7 @@ export class AuthController {
   }
 
   @Public()
-  @Post('user-verification/:userId/:verificationToken')
+  @Get('user-verification/:userId/:verificationToken')
   async validateUser(
     @Param('verificationToken') verificationToken: string,
     @Param('userId', ParseIntPipe) userId: number,
@@ -172,7 +171,12 @@ export class AuthController {
       TokenType.RESET_PASSWORD,
     );
     // Send mail with password reset token and userId
-    // ...
+    await this.emailService.sendMail(
+      user.email,
+      passwordResetToken,
+      user.id,
+      false,
+    );
     // Return success message
     return 'Email with instructions send, please check your mails';
   }

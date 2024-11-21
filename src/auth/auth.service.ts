@@ -5,13 +5,30 @@ import { SigninDto } from './dtos/signin.dto';
 import { v4 as uuidv4 } from 'uuid';
 import * as bcrypt from 'bcrypt';
 import { expiredAtDateGenerator } from 'utils/expiredAtDateGenerator';
+import { SignupDto } from './dtos/signup.dto';
+import { EmailService } from 'src/email/email.service';
+import { TokenWithUserEmail } from './interfaces/TokenWithUserEmail';
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly emailService: EmailService,
+  ) {}
 
-  async createUser(createAuthDto: SigninDto): Promise<User> {
-    return this.prismaService.user.create({ data: createAuthDto });
+  async createUserWithProfile(body: SignupDto): Promise<User> {
+    return this.prismaService.user.create({
+      data: {
+        email: body.email,
+        password: body.password,
+        profile: {
+          create: {
+            firstname: body.firstname,
+            lastname: body.lastname,
+          },
+        },
+      },
+    });
   }
 
   async checkUserStatus(userStatus: UserStatus, userId: number): Promise<void> {
@@ -40,7 +57,12 @@ export class AuthService {
     type: TokenType,
   ): Promise<Token> {
     return this.prismaService.token.create({
-      data: { userId, token, type, expiredAt: expiredAtDateGenerator() },
+      data: {
+        user: { connect: { id: userId } },
+        token,
+        type,
+        expiredAt: expiredAtDateGenerator(),
+      },
     });
   }
 
@@ -63,10 +85,27 @@ export class AuthService {
     });
   }
 
-  async findToken(userId: number, type: TokenType): Promise<Token> {
-    return this.prismaService.token.findUnique({
+  async findToken(
+    userId: number,
+    type: TokenType,
+  ): Promise<TokenWithUserEmail> {
+    const token = await this.prismaService.token.findUnique({
       where: { userId_type: { userId, type } },
+      include: {
+        user: {
+          select: {
+            email: true,
+          },
+        },
+      },
     });
+    return {
+      token: token.token,
+      type: token.type,
+      expiredAt: token.expiredAt,
+      userId: token.userId,
+      email: token.user.email,
+    };
   }
 
   async deleteToken(userId: number, type: TokenType): Promise<string> {
@@ -88,12 +127,20 @@ export class AuthService {
     }
   }
 
-  async checkIfTokenExpired(savedToken: Token, type: TokenType) {
+  async checkIfTokenExpired(
+    savedToken: TokenWithUserEmail,
+    type: TokenType,
+  ): Promise<void> {
     if (new Date() > savedToken.expiredAt) {
       const token = uuidv4();
       await this.hashAndSaveToken(token, savedToken.userId, type);
       // Send mail with token and userId
-      // ...
+      await this.emailService.sendMail(
+        savedToken.email,
+        token,
+        savedToken.userId,
+        type === TokenType.RESET_PASSWORD && false,
+      );
       throw new UnauthorizedException();
     }
   }

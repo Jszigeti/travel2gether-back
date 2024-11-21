@@ -40,7 +40,7 @@ model Profile {
   firstname             String                    @db.VarChar(30)
   lastname              String                    @db.VarChar(30)
   birthdate             String?                   @db.VarChar(10)
-  gender                Gender?                   @default(OTHER) 
+  gender                ProfileGender?            @default(OTHER) 
   pathPicture           String?                   @map("path_picture") @db.VarChar(255)
   description           String?                   @db.VarChar(2000)
   budget                Budget?       
@@ -91,7 +91,7 @@ model Group {
   dateTo                DateTime                  @map("date_to") 
   pathPicture           String                    @map("path_picture") @db.VarChar(255)
   status                GroupStatus               @default(PENDING)
-  genderType            GenderType?               @default(MIXED) @map("gender_type")
+  gender                GroupGender?              @default(MIXED)
   budget                Budget?       
   stages                Stage[]       
   travelTypes           GroupTravelTypes[]              
@@ -181,118 +181,138 @@ model Checklist {
   group                 Group?                    @relation(fields: [groupId], references: [id])
 }       
 
-model TravelType {        
-  id                    Int                       @id @default(autoincrement())
-  name                  String                    @unique @db.VarChar(100)
-  profiles              ProfileTravelTypes[]             
-  groups                GroupTravelTypes[]               
-}   
-
-model Lodging {   
-  id                    Int                       @id @default(autoincrement())
-  name                  String                    @unique @db.VarChar(100)
-  profiles              ProfileLodgings[]                 
-  groups                GroupLodgings[]                   
-}       
-
-model Interest {        
-  id                    Int                       @id @default(autoincrement())
-  name                  String                    @unique @db.VarChar(100)
-  profiles              ProfileInterests[]         
-}       
-
-model Language {        
-  id                    Int                       @id @default(autoincrement())
-  name                  String                    @unique @db.VarChar(100)
-  profiles              ProfileLanguages[]                 
-  groups                GroupLanguages[]                   
-}       
-
-model TripDuration {        
-  id                    Int                       @id @default(autoincrement())
-  name                  String                    @unique @db.VarChar(100)
-  profiles              ProfileTripDurations[]         
-}   
-
-model AgeRange {    
-  id                    Int                       @id @default(autoincrement())
-  name                  String                    @unique @db.VarChar(100)
-  groups                GroupAgeRanges[]        
-}   
-
 model ProfileTravelTypes {    
   userId                Int                       @map("user_id")
-  travelTypeId          Int                       @map("travel_type_id")
+  travelType            TravelTypes
   profile               Profile                   @relation(fields: [userId], references: [userId])
-  travelType            TravelType                @relation(fields: [travelTypeId], references: [id])
-  @@id([userId, travelTypeId])    
+  @@id([userId, travelType])    
 }   
 
 model ProfileLodgings {   
-  userId                Int                       @map("user_id")                          
-  lodgingId             Int                       @map("lodging_id")
+  userId                Int                       @map("user_id")
+  lodging               Lodgings
   profile               Profile                   @relation(fields: [userId], references: [userId])
-  lodging               Lodging                   @relation(fields: [lodgingId], references: [id])
-  @@id([userId, lodgingId])   
-}   
+  @@id([userId, lodging])   
+}
 
 model ProfileInterests {    
   userId                Int                       @map("user_id")
-  interestId            Int                       @map("interest_id")
+  interest              Interests
   profile               Profile                   @relation(fields: [userId], references: [userId])
-  interest              Interest                  @relation(fields: [interestId], references: [id])
-  @@id([userId, interestId])    
-}   
+  @@id([userId, interest])    
+} 
 
 model ProfileLanguages {    
   userId                Int                       @map("user_id")
-  languageId            Int                       @map("language_id")
+  language              Languages
   profile               Profile                   @relation(fields: [userId], references: [userId])
-  language              Language                  @relation(fields: [languageId], references: [id])
-  @@id([userId, languageId])          
-}         
+  @@id([userId, language])          
+} 
 
 model ProfileTripDurations {            
   userId                Int                       @map("user_id")
-  tripDurationId        Int                       @map("trip_duration_id")
+  tripDuration          TripDurations
   profile               Profile                   @relation(fields: [userId], references: [userId])
-  tripDuration          TripDuration              @relation(fields: [tripDurationId], references: [id])
-  @@id([userId, tripDurationId])          
-}         
+  @@id([userId, tripDuration])          
+}
 
 model GroupTravelTypes {          
   groupId               Int                       @map("group_id")
-  travelTypeId          Int                       @map("travel_type_id")
+  travelType            TravelTypes
   group                 Group                     @relation(fields: [groupId], references: [id])
-  travelType            TravelType                @relation(fields: [travelTypeId], references: [id])
-  @@id([groupId, travelTypeId])         
-}         
+  @@id([groupId, travelType])         
+}
 
 model GroupLodgings {         
   groupId               Int                       @map("group_id")
-  lodgingId             Int                       @map("lodging_id")
+  lodging               Lodgings
   group                 Group                     @relation(fields: [groupId], references: [id])
-  lodging               Lodging                   @relation(fields: [lodgingId], references: [id])
-  @@id([groupId, lodgingId])          
-}         
-
+  @@id([groupId, lodging])          
+}
+                
 model GroupLanguages {          
   groupId               Int                       @map("group_id")
-  languageId            Int                       @map("language_id")
+  language              Languages
   group                 Group                     @relation(fields: [groupId], references: [id])
-  language              Language                  @relation(fields: [languageId], references: [id])
-  @@id([groupId, languageId])         
+  @@id([groupId, language])         
 }         
 
 model GroupAgeRanges {          
   groupId               Int                       @map("group_id")
-  ageRangeId            Int                       @map("age_range_id")
+  ageRange              AgeRanges
   group                 Group                     @relation(fields: [groupId], references: [id])
-  ageRange              AgeRange                  @relation(fields: [ageRangeId], references: [id])
-  @@id([groupId, ageRangeId])
+  @@id([groupId, ageRange])
 }
 
-enum Gender {
+enum TravelTypes {
+  RELAXATION
+  ADVENTURE
+  CULTURAL
+  HIKING
+  BEACH
+  GASTRONOMIC 
+  ROAD_TRIP
+  CRUISE
+  FAMILY_TRIP 
+  FRIENDS_TRIP
+  ECO_FRIENDLY
+}
+
+enum Lodgings {
+  YOUTH_HOTEL
+  HOTEL
+  AIRBNB
+  CAMPING
+  ECOLODGE
+  LUXURY
+}
+
+enum Interests {
+  ADVENTURE_SPORTS 
+  CULTURAL_ARTS
+  GASTRONOMIC
+  NATURE
+  WELLNESS
+  PARTY
+  AMUSEMENT_PARK
+  BOARD_GAMES
+  TECHNOLOGIES 
+  HISTORY 
+  WATER_ACTIVITIES 
+  SHOPPING 
+  FAMILY_ACTIVITIES
+}
+
+enum Languages {
+  FRENCH
+  ENGLISH
+  SPANISH
+  PORTUGUESE
+  ARABIC 
+  ITALIAN 
+  JAPANESE 
+  MANDARIN 
+  DEUTSCH 
+  DUTCH 
+  RUSSIAN 
+  HINDI 
+  GREEK 
+}
+
+enum TripDurations {
+  SHORT_TRIP
+  MEDIUM_TRIP
+  LONG_TRIP
+}
+
+enum AgeRanges {
+  FIRST_AGE_RANGE 
+  SECOND_AGE_RANGE 
+  THIRD_AGE_RANGE 
+  FOURTH_AGE_RANGE 
+}
+
+enum ProfileGender {
   MALE
   FEMALE
   OTHER
@@ -323,7 +343,7 @@ enum GroupRole {
   AUTHOR
 }
 
-enum GenderType {
+enum GroupGender {
   MALE
   FEMALE
   OTHER
