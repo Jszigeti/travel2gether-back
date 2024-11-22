@@ -147,10 +147,8 @@ export class AuthController {
     if (!(await bcrypt.compare(verificationToken, savedToken.token)))
       throw new UnauthorizedException();
     // Edit user status
-    await this.usersService.editUserStatus(
-      savedToken.userId,
-      UserStatus.VERIFIED,
-    );
+    await this.usersService.editUserStatus(userId, UserStatus.VERIFIED);
+    await this.authService.deleteToken(userId, TokenType.VERIFICATION);
     // Return success message
     return 'User validated';
   }
@@ -205,9 +203,10 @@ export class AuthController {
       throw new UnauthorizedException();
     // Edit user password
     await this.usersService.resetUserPassword(
-      savedToken.userId,
+      userId,
       await bcrypt.hash(body.password, 10),
     );
+    await this.authService.deleteToken(userId, TokenType.RESET_PASSWORD);
     // Return success message
     return 'Password reset successfully';
   }

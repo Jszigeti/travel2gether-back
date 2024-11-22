@@ -51,10 +51,11 @@ export class UsersService {
         },
       },
     });
-
+    const { ratingsReceived, languages, ...profileWithoutRatingsUntraited } =
+      profile;
     return {
       profile: {
-        ...profile,
+        ...profileWithoutRatingsUntraited,
         averageRating:
           profile.ratingsReceived
             .map((ratingReceiver) => ratingReceiver.value)

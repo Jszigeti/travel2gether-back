@@ -20,7 +20,7 @@ model User {
 
 model Token {
   userId                Int                       @map("user_id")
-  user                  User                      @relation(fields: [userId], references: [id])
+  user                  User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
   token                 String                    @unique
   type                  TokenType
   expiredAt             DateTime                  @map("expired_at")
@@ -48,7 +48,7 @@ model Profile {
   availableTo           DateTime?                 @map("available_to")
   createdAt             DateTime                  @map("created_at") @default(now())
   updatedAt             DateTime                  @map("updated_at") @updatedAt
-  user                  User                      @relation(fields: [userId], references: [id])
+  user                  User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
   travelTypes           ProfileTravelTypes[] 
   lodgings              ProfileLodgings[]         
   interests             ProfileInterests[]        
@@ -78,7 +78,7 @@ model Stage {
   groupId               Int                       @map("group_id")
   createdAt             DateTime                  @map("created_at") @default(now())
   updatedAt             DateTime                  @map("updated_at") @updatedAt
-  group                 Group                     @relation(fields: [groupId], references: [id])
+  group                 Group                     @relation(fields: [groupId], references: [id], onDelete: Cascade)
   checklist             Checklist[]   
 }   
 
@@ -108,11 +108,12 @@ model GroupUser {
   userId                Int                       @map("user_id")
   groupId               Int                       @map("group_id")
   role                  GroupRole       
-  status                GroupStatus       
+  status                GroupUserStatus
+  isInvited             Boolean                   @map("is_invited") @default(false)       
   createdAt             DateTime                  @map("created_at") @default(now())
   updatedAt             DateTime                  @map("updated_at")  @updatedAt
-  user                  Profile                   @relation(fields: [userId], references: [userId])
-  group                 Group                     @relation(fields: [groupId], references: [id])
+  user                  Profile                   @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  group                 Group                     @relation(fields: [groupId], references: [id], onDelete: Cascade)
   @@id([userId, groupId])       
 }       
 
@@ -124,7 +125,7 @@ model Notification {
   isRead                Boolean                   @default(false) @map("is_read")
   createdAt             DateTime                  @map("created_at") @default(now())
   updatedAt             DateTime                  @map("updated_at") @updatedAt
-  user                  Profile                   @relation(fields: [userId], references: [userId])
+  user                  Profile                   @relation(fields: [userId], references: [userId], onDelete: Cascade)
 }       
 
 model Media {       
@@ -134,8 +135,8 @@ model Media {
   alt                   String                    @db.VarChar(255)
   path                  String                    @unique @db.VarChar(255)
   createdAt             DateTime                  @map("created_at") @default(now())
-  user                  Profile                   @relation(fields: [userId], references: [userId])
-  group                 Group                     @relation(fields: [groupId], references: [id])
+  user                  Profile                   @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  group                 Group                     @relation(fields: [groupId], references: [id], onDelete: Cascade)
 }       
 
 model Rating {        
@@ -143,8 +144,8 @@ model Rating {
   ratedId               Int                       @map("rated_id")
   value                 Int       
   createdAt             DateTime                  @map("created_at") @default(now())
-  rater                 Profile                   @relation("RaterUser", fields: [raterId], references: [userId])
-  rated                 Profile                   @relation("RatedUser", fields: [ratedId], references: [userId])
+  rater                 Profile                   @relation("RaterUser", fields: [raterId], references: [userId], onDelete: Cascade)
+  rated                 Profile                   @relation("RatedUser", fields: [ratedId], references: [userId], onDelete: Cascade)
   @@id([raterId, ratedId])        
 }       
 
@@ -153,8 +154,8 @@ model Moderating {
   moderatedId           Int                       @map("moderated_id")
   value                 Int       
   createdAt             DateTime                  @map("created_at") @default(now())
-  moderater             Profile                   @relation("ModeraterUser", fields: [moderaterId], references: [userId])
-  moderated             Profile                   @relation("ModeratedUser", fields: [moderatedId], references: [userId])
+  moderater             Profile                   @relation("ModeraterUser", fields: [moderaterId], references: [userId], onDelete: Cascade)
+  moderated             Profile                   @relation("ModeratedUser", fields: [moderatedId], references: [userId], onDelete: Cascade)
   @@id([moderaterId, moderatedId])        
 }       
 
@@ -165,9 +166,9 @@ model Message {
   userReceiverId        Int?                      @map("user_receiver_id")
   groupReceiverId       Int?                      @map("group_receiver_id")
   createdAt             DateTime                  @map("created_at") @default(now())
-  senderUser            Profile                   @relation("SenderUser", fields: [senderId], references: [userId])
-  receiverUser          Profile?                  @relation("ReceiverUser", fields: [userReceiverId], references: [userId])
-  receiverGroup         Group?                    @relation(fields: [groupReceiverId], references: [id])
+  senderUser            Profile                   @relation("SenderUser", fields: [senderId], references: [userId], onDelete: Cascade)
+  receiverUser          Profile?                  @relation("ReceiverUser", fields: [userReceiverId], references: [userId], onDelete: Cascade)
+  receiverGroup         Group?                    @relation(fields: [groupReceiverId], references: [id], onDelete: Cascade)
 }       
 
 model Checklist {       
@@ -177,70 +178,70 @@ model Checklist {
   item                  String                    @db.VarChar(50)
   createdAt             DateTime                  @map("created_at") @default(now())
   updatedAt             DateTime                  @map("updated_at") @updatedAt
-  stage                 Stage?                    @relation(fields: [stageId], references: [id])
-  group                 Group?                    @relation(fields: [groupId], references: [id])
+  stage                 Stage?                    @relation(fields: [stageId], references: [id], onDelete: Cascade)
+  group                 Group?                    @relation(fields: [groupId], references: [id], onDelete: Cascade)
 }       
 
 model ProfileTravelTypes {    
   userId                Int                       @map("user_id")
   travelType            TravelTypes
-  profile               Profile                   @relation(fields: [userId], references: [userId])
+  profile               Profile                   @relation(fields: [userId], references: [userId], onDelete: Cascade)
   @@id([userId, travelType])    
 }   
 
 model ProfileLodgings {   
   userId                Int                       @map("user_id")
   lodging               Lodgings
-  profile               Profile                   @relation(fields: [userId], references: [userId])
+  profile               Profile                   @relation(fields: [userId], references: [userId], onDelete: Cascade)
   @@id([userId, lodging])   
 }
 
 model ProfileInterests {    
   userId                Int                       @map("user_id")
   interest              Interests
-  profile               Profile                   @relation(fields: [userId], references: [userId])
+  profile               Profile                   @relation(fields: [userId], references: [userId], onDelete: Cascade)
   @@id([userId, interest])    
 } 
 
 model ProfileLanguages {    
   userId                Int                       @map("user_id")
   language              Languages
-  profile               Profile                   @relation(fields: [userId], references: [userId])
+  profile               Profile                   @relation(fields: [userId], references: [userId], onDelete: Cascade)
   @@id([userId, language])          
 } 
 
 model ProfileTripDurations {            
   userId                Int                       @map("user_id")
   tripDuration          TripDurations
-  profile               Profile                   @relation(fields: [userId], references: [userId])
+  profile               Profile                   @relation(fields: [userId], references: [userId], onDelete: Cascade)
   @@id([userId, tripDuration])          
 }
 
 model GroupTravelTypes {          
   groupId               Int                       @map("group_id")
   travelType            TravelTypes
-  group                 Group                     @relation(fields: [groupId], references: [id])
+  group                 Group                     @relation(fields: [groupId], references: [id], onDelete: Cascade)
   @@id([groupId, travelType])         
 }
 
 model GroupLodgings {         
   groupId               Int                       @map("group_id")
   lodging               Lodgings
-  group                 Group                     @relation(fields: [groupId], references: [id])
+  group                 Group                     @relation(fields: [groupId], references: [id], onDelete: Cascade)
   @@id([groupId, lodging])          
 }
                 
 model GroupLanguages {          
   groupId               Int                       @map("group_id")
   language              Languages
-  group                 Group                     @relation(fields: [groupId], references: [id])
+  group                 Group                     @relation(fields: [groupId], references: [id], onDelete: Cascade)
   @@id([groupId, language])         
 }         
 
 model GroupAgeRanges {          
   groupId               Int                       @map("group_id")
   ageRange              AgeRanges
-  group                 Group                     @relation(fields: [groupId], references: [id])
+  group                 Group                     @relation(fields: [groupId], references: [id], onDelete: Cascade)
   @@id([groupId, ageRange])
 }
 
@@ -329,6 +330,12 @@ enum UserStatus {
   NOT_VERIFIED
   VERIFIED
   BANNED
+}
+
+enum GroupUserStatus {
+  PENDING
+  ACCEPTED
+  DENIED
 }
 
 enum GroupStatus {
