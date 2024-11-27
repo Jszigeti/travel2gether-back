@@ -29,7 +29,10 @@ export class GroupsService {
     languages?: Languages[];
     ageRanges?: AgeRanges[];
     gender?: GroupGender;
-  }): Promise<Group[]> {
+
+    page?: number; // Page actuelle
+    limit?: number; // Nombre de résultats par page
+  }): Promise<{ groups: Group[]; total: number }> {
     const filters = [];
 
     // Critère pour location (recherche partielle)
@@ -105,12 +108,28 @@ export class GroupsService {
       filters.push({ gender: query.gender });
     }
 
-    // Effectuer la recherche uniquement avec des critères valides
-    return this.prisma.group.findMany({
-      where: {
-        AND: filters, // Combine tous les critères de manière stricte
-      },
-    });
+    // Gestion de la pagination
+    const page = query.page || 1; // Par défaut, page 1
+    const limit = query.limit || 10; // Par défaut, 10 résultats par page
+    const skip = (page - 1) * limit;
+
+    // Récupérer les résultats avec pagination
+    const [groups, total] = await Promise.all([
+      this.prisma.group.findMany({
+        where: {
+          AND: filters,
+        },
+        skip,
+        take: limit,
+      }),
+      this.prisma.group.count({
+        where: {
+          AND: filters,
+        },
+      }),
+    ]);
+
+    return { groups, total };
   }
 
   findAll() {

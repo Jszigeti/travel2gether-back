@@ -81,6 +81,9 @@ export class GroupsController {
       languages?: string | string[];
       ageRanges?: string | string[];
       gender?: string;
+
+      page?: string; // La page actuelle (optionnel)
+      limit?: string; // Le nombre de résultats par page (optionnel)
     },
   ) {
     // Convertir les champs en tableau si nécessaire
@@ -97,6 +100,9 @@ export class GroupsController {
       ageRanges: toArray(query.ageRanges).map((range) => range as AgeRanges),
       budget: query.budget as Budget,
       gender: query.gender as GroupGender,
+
+      page: parseInt(query.page || '1', 10), // Page par défaut : 1
+      limit: parseInt(query.limit || '10', 10), // Limite par défaut : 10
     };
 
     return this.groupsService.search(convertedQuery);
