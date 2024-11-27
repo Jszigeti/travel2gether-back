@@ -22,6 +22,7 @@ import {
 } from '@prisma/client';
 import { Public } from 'src/auth/decorators/public.decorator';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { SearchGroupDto } from './dto/search-group.dto';
 
 @Controller('groups')
 export class GroupsController {
@@ -36,76 +37,9 @@ export class GroupsController {
   }
 
   @Public()
-  @Get('test-relations')
-  async testRelations() {
-    try {
-      const groups = await this.prisma.group.findMany({
-        where: {
-          AND: [
-            {
-              travelTypes: {
-                some: {
-                  travelType: 'RELAXATION', // Remplace par une valeur valide
-                },
-              },
-            },
-            {
-              lodgings: {
-                some: {
-                  lodging: 'HOTEL', // Remplace par une valeur valide
-                },
-              },
-            },
-          ],
-        },
-      });
-
-      return groups;
-    } catch (error) {
-      console.error('Error:', error);
-      throw error;
-    }
-  }
-
-  @Public()
   @Get('search')
-  async search(
-    @Query()
-    query: {
-      location?: string;
-      dateFrom?: string;
-      dateTo?: string;
-      travelTypes?: string | string[]; // Accepte une chaîne ou un tableau
-      lodgings?: string | string[];
-      budget?: string;
-      languages?: string | string[];
-      ageRanges?: string | string[];
-      gender?: string;
-
-      page?: string; // La page actuelle (optionnel)
-      limit?: string; // Le nombre de résultats par page (optionnel)
-    },
-  ) {
-    // Convertir les champs en tableau si nécessaire
-    const toArray = (value: string | string[] | undefined): string[] =>
-      Array.isArray(value) ? value : value ? value.split(',') : [];
-
-    const convertedQuery = {
-      ...query,
-      travelTypes: toArray(query.travelTypes).map(
-        (type) => type as TravelTypes,
-      ),
-      lodgings: toArray(query.lodgings).map((lodging) => lodging as Lodgings),
-      languages: toArray(query.languages).map((lang) => lang as Languages),
-      ageRanges: toArray(query.ageRanges).map((range) => range as AgeRanges),
-      budget: query.budget as Budget,
-      gender: query.gender as GroupGender,
-
-      page: parseInt(query.page || '1', 10), // Page par défaut : 1
-      limit: parseInt(query.limit || '10', 10), // Limite par défaut : 10
-    };
-
-    return this.groupsService.search(convertedQuery);
+  async search(@Query() query: SearchGroupDto) {
+    return this.groupsService.search(query);
   }
 
   @Get()

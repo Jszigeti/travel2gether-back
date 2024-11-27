@@ -11,7 +11,13 @@ async function bootstrap() {
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
   });
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true, // Transforme les données automatiquement
+      whitelist: true, // Supprime les champs non définis dans le DTO
+      forbidNonWhitelisted: true, // Retourne une erreur pour les champs non définis
+    }),
+  );
   const config = new DocumentBuilder()
     .setTitle('Travel2Gether')
     .setDescription('Travel2Gether API description')
