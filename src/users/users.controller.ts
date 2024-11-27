@@ -49,8 +49,13 @@ export class UsersController {
     // Remove oldPassword from body
     const { oldPassword, ...updatedBody } = body;
     // If email update check if email already exists
-    if (body.email && (await this.usersService.findUser({ email: body.email })))
-      throw new UnauthorizedException('New email already exists');
+    if (body.email) {
+      const existingUser = await this.usersService.findUser({
+        email: body.email,
+      });
+      if (existingUser && existingUser.id !== req.user.sub)
+        throw new UnauthorizedException('New email already exists');
+    }
     // Update user and return success message
     return this.usersService.patchUser(req.user.sub, updatedBody);
   }
