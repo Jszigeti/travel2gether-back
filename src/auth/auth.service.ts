@@ -99,6 +99,7 @@ export class AuthService {
         },
       },
     });
+    if (!token) return null;
     return {
       token: token.token,
       type: token.type,

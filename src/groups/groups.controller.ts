@@ -10,6 +10,7 @@ import {
 import { GroupsService } from './groups.service';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { UpdateGroupDto } from './dto/update-group.dto';
+import { Prisma } from '@prisma/client';
 
 @Controller('groups')
 export class GroupsController {
@@ -26,8 +27,8 @@ export class GroupsController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.groupsService.findOne(+id);
+  findOne(@Param('id') id: Prisma.GroupWhereUniqueInput) {
+    return this.groupsService.findOne(id);
   }
 
   @Patch(':id')
