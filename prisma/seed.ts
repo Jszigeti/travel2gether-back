@@ -1,5 +1,6 @@
 import { NotificationReferenceType, PrismaClient } from '@prisma/client';
 import { faker } from '@faker-js/faker';
+import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
@@ -21,7 +22,7 @@ async function main() {
       return await prisma.user.create({
         data: {
           email: `user${i}_${faker.internet.email()}`,
-          password: 'azerty',
+          password: await bcrypt.hash('azerty', 10),
           status: faker.helpers.arrayElement([
             'NOT_VERIFIED',
             'VERIFIED',
@@ -150,7 +151,7 @@ async function main() {
         data: {
           title: faker.lorem.words(3),
           description: faker.lorem.paragraph(),
-          location: faker.address.city(),
+          location: faker.location.streetAddress(),
           dateFrom: faker.date.soon(),
           dateTo: faker.date.future(),
           pathPicture: faker.image.url(),
@@ -277,9 +278,9 @@ async function main() {
               description: faker.lorem.paragraph(),
               dateFrom: faker.date.soon(),
               dateTo: faker.date.future(),
-              address: faker.address.streetAddress(),
-              longitude: faker.address.longitude(),
-              latitude: faker.address.latitude(),
+              address: faker.location.streetAddress(),
+              longitude: faker.location.longitude(),
+              latitude: faker.location.latitude(),
               groupId: group.id,
               pathPicture: faker.image.url(),
             },

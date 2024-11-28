@@ -31,7 +31,7 @@ export class MessagesController {
     @Param('user_receiver_id', ParseIntPipe) userReceiverId: number,
     @Req() req: Request,
   ) {
-    if (!(await this.usersService.findProfile(userReceiverId)))
+    if (!(await this.usersService.findProfile({ userId: userReceiverId })))
       throw new NotFoundException('User not found');
     return this.messagesService.sendToUser(
       createMessageDto,

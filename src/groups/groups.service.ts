@@ -3,7 +3,6 @@ import { CreateGroupDto } from './dto/create-group.dto';
 import { UpdateGroupDto } from './dto/update-group.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import {
-  AgeRanges,
   Budget,
   Group,
   GroupGender,
@@ -11,14 +10,10 @@ import {
   GroupUser,
   GroupUserStatus,
   Prisma,
-    Languages,
-  Lodgings,
-  TravelTypes,
 } from '@prisma/client';
 import { GroupWithMembers } from './interfaces/GroupWithMembers';
 import { GroupWithMembersAndStages } from './interfaces/GroupWithMembersAndStages';
 import { SearchGroupDto } from './dto/search-group.dto';
-import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class GroupsService {
@@ -65,17 +60,19 @@ export class GroupsService {
         },
       },
     });
-    return {
-      group: {
-        ...group,
-        members: group.members.map((member) => ({
-          pathPicture: member.user.pathPicture,
-          userId: member.user.userId,
-          firstname: member.user.firstname,
-        })),
-        stages: group.stages,
-      },
-    };
+    if (group) {
+      return {
+        group: {
+          ...group,
+          members: group.members.map((member) => ({
+            pathPicture: member.user.pathPicture,
+            userId: member.user.userId,
+            firstname: member.user.firstname,
+          })),
+          stages: group.stages,
+        },
+      };
+    }
   }
 
   async search(
@@ -106,7 +103,7 @@ export class GroupsService {
     }
 
     // Filtre pour dateFrom > aujourd'hui
-    filters.push({ dateFrom: { gte: new Date() } });
+    // filters.push({ dateFrom: { gte: new Date() } });
 
     // Critère pour dateFrom (date minimale fournie par l'utilisateur)
     if (query.dateFrom) {

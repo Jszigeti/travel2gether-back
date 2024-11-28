@@ -27,17 +27,6 @@ import {
 import { Public } from 'src/auth/decorators/public.decorator';
 import { GroupWithMembersAndStages } from './interfaces/GroupWithMembersAndStages';
 import { NotificationsService } from 'src/notifications/notifications.service';
-import {
-  AgeRanges,
-  Budget,
-  Group,
-  GroupGender,
-  Languages,
-  Lodgings,
-  TravelTypes,
-} from '@prisma/client';
-import { Public } from 'src/auth/decorators/public.decorator';
-import { PrismaService } from 'src/prisma/prisma.service';
 import { SearchGroupDto } from './dto/search-group.dto';
 import { Prisma } from '@prisma/client';
 
@@ -55,6 +44,12 @@ export class GroupsController {
     @Body() body: CreateGroupDto,
   ): Promise<Group> {
     return this.groupsService.create(body, req.user.sub);
+  }
+
+  @Public()
+  @Get('search')
+  async search(@Query() query: SearchGroupDto) {
+    return this.groupsService.search(query);
   }
 
   @Public()
@@ -92,20 +87,15 @@ export class GroupsController {
     return 'Group successfully updated';
   }
 
-  @Get('search')
-  async search(@Query() query: SearchGroupDto) {
-    return this.groupsService.search(query);
-  }
+  // @Get()
+  // findAll() {
+  //   return this.groupsService.findAll();
+  // }
 
-  @Get()
-  findAll() {
-    return this.groupsService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: Prisma.GroupWhereUniqueInput) {
-    return this.groupsService.findOne(id);
-  }
+  // @Get(':id')
+  // findOne(@Param('id') id: Prisma.GroupWhereUniqueInput) {
+  //   return this.groupsService.findOne(id);
+  // }
 
   @Delete(':groupId')
   async delete(
