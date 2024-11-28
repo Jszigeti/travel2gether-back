@@ -3,6 +3,7 @@ import { CreateGroupDto } from './dto/create-group.dto';
 import { UpdateGroupDto } from './dto/update-group.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import {
+  AgeRanges,
   Budget,
   Group,
   GroupGender,
@@ -10,9 +11,14 @@ import {
   GroupUser,
   GroupUserStatus,
   Prisma,
+    Languages,
+  Lodgings,
+  TravelTypes,
 } from '@prisma/client';
 import { GroupWithMembers } from './interfaces/GroupWithMembers';
 import { GroupWithMembersAndStages } from './interfaces/GroupWithMembersAndStages';
+import { SearchGroupDto } from './dto/search-group.dto';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class GroupsService {
@@ -70,6 +76,89 @@ export class GroupsService {
         stages: group.stages,
       },
     };
+  }
+
+  async search(
+    query: SearchGroupDto,
+  ): Promise<{ groups: Group[]; total: number }> {
+    const filters = [];
+
+    // Ajout des critères dynamiques via une fonction utilitaire
+    const addFilter = (field: string, values: string[], column: string) => {
+      if (values?.length) {
+        filters.push({
+          OR: values.map((value) => ({
+            [field]: {
+              some: { [column]: value },
+            },
+          })),
+        });
+      }
+    };
+
+    // Critère pour location (recherche partielle)
+    if (query.location) {
+      filters.push({
+        location: {
+          contains: query.location,
+        },
+      });
+    }
+
+    // Filtre pour dateFrom > aujourd'hui
+    filters.push({ dateFrom: { gte: new Date() } });
+
+    // Critère pour dateFrom (date minimale fournie par l'utilisateur)
+    if (query.dateFrom) {
+      filters.push({ dateFrom: { gte: new Date(query.dateFrom) } });
+    }
+
+    // Critère pour dateTo (date maximale fournie par l'utilisateur)
+    if (query.dateTo) {
+      filters.push({ dateTo: { lte: new Date(query.dateTo) } });
+    }
+
+    // Critères pour travelTypes, lodgings, languages, ageRanges
+    addFilter('travelTypes', query.travelTypes, 'travelType');
+    addFilter('lodgings', query.lodgings, 'lodging');
+    addFilter('languages', query.languages, 'language');
+    addFilter('ageRanges', query.ageRanges, 'ageRange');
+
+    // Critères simples pour budget et gender
+    if (query.budget) {
+      filters.push({ budget: query.budget });
+    }
+    if (query.gender) {
+      filters.push({ gender: query.gender });
+    }
+
+    // Gestion de la pagination
+    const page = query.page || 1;
+    const limit = query.limit || 10;
+    const skip = (page - 1) * limit;
+
+    // Récupérer les résultats avec pagination et tri
+    const [groups, total] = await Promise.all([
+      this.prismaService.group.findMany({
+        where: {
+          AND: filters,
+        },
+        skip,
+        take: limit,
+        orderBy: { dateFrom: 'asc' }, // Trie par dateFrom, de la plus proche à la plus éloignée
+      }),
+      this.prismaService.group.count({
+        where: {
+          AND: filters,
+        },
+      }),
+    ]);
+
+    return { groups, total };
+  }
+
+  findAll() {
+    return `This action returns all groups`;
   }
 
   async update(id: number, body: UpdateGroupDto): Promise<Group> {
