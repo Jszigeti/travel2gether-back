@@ -13,7 +13,7 @@ import {
 import { MessagesService } from './messages.service';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { UpdateMessageDto } from './dto/update-message.dto';
-import { Request } from 'express';
+import { request, Request } from 'express';
 import { UsersService } from 'src/users/users.service';
 import { GroupsService } from 'src/groups/groups.service';
 
@@ -56,8 +56,9 @@ export class MessagesController {
   }
 
   @Get()
-  findAll() {
-    return this.messagesService.findAll();
+  findConversations(@Req() req: Request) {
+    const userId = req.user.sub;
+    return this.messagesService.findConversations(userId);
   }
 
   @Get(':id')
