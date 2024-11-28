@@ -53,7 +53,7 @@ async function main() {
                       'ECOLODGE',
                       'LUXURY',
                     ])
-                    .slice(0, 3) // Prends seulement 3 valeurs uniques
+                    .slice(0, 3) // Picks 3 unique values
                     .map((lodging) => ({ lodging })),
                 },
               },
@@ -73,7 +73,7 @@ async function main() {
                       'FRIENDS_TRIP',
                       'ECO_FRIENDLY',
                     ])
-                    .slice(0, 3) // Prends seulement 3 valeurs uniques
+                    .slice(0, 3) // Picks 3 unique values
                     .map((travelType) => ({ travelType })),
                 },
               },
@@ -96,7 +96,7 @@ async function main() {
                       'SHOPPING',
                       'FAMILY_ACTIVITIES',
                     ])
-                    .slice(0, 3) // Prends seulement 3 valeurs uniques
+                    .slice(0, 3) // Picks 3 unique values
                     .map((interest) => ({ interest })),
                 },
               },
@@ -118,7 +118,7 @@ async function main() {
                       'HINDI',
                       'GREEK',
                     ])
-                    .slice(0, 3) // Prends seulement 3 valeurs uniques
+                    .slice(0, 3) // Picks 3 unique values
                     .map((language) => ({ language })),
                 },
               },
@@ -126,7 +126,7 @@ async function main() {
                 createMany: {
                   data: faker.helpers
                     .shuffle(['SHORT_TRIP', 'MEDIUM_TRIP', 'LONG_TRIP'])
-                    .slice(0, 3) // Prends seulement 3 valeurs uniques
+                    .slice(0, 3) // Picks 3 unique values
                     .map((tripDuration) => ({ tripDuration })),
                 },
               },
@@ -178,7 +178,7 @@ async function main() {
                   'ECOLODGE',
                   'LUXURY',
                 ])
-                .slice(0, 3) // Prends seulement 3 valeurs uniques
+                .slice(0, 3) // Picks 3 unique values
                 .map((lodging) => ({ lodging })),
             },
           },
@@ -198,7 +198,7 @@ async function main() {
                   'FRIENDS_TRIP',
                   'ECO_FRIENDLY',
                 ])
-                .slice(0, 3) // Prends seulement 3 valeurs uniques
+                .slice(0, 3) // Picks 3 unique values
                 .map((travelType) => ({ travelType })),
             },
           },
@@ -220,23 +220,23 @@ async function main() {
                   'HINDI',
                   'GREEK',
                 ])
-                .slice(0, 3) // Prends seulement 3 valeurs uniques
+                .slice(0, 3) // Picks 3 unique values
                 .map((language) => ({ language })),
             },
           },
           members: {
             create: (() => {
-              const usedUserIds = new Set<number>(); // Garde une trace des utilisateurs déjà ajoutés
+              const usedUserIds = new Set<number>(); // Keeping track of previously added users
 
               return Array.from({
                 length: faker.number.int({ min: 1, max: 6 }),
               }).map(() => {
                 let randomUser;
-                // Boucle jusqu'à obtenir un utilisateur unique pour ce groupe
+                // Loop until a unique user is returned for this group
                 do {
                   randomUser = faker.helpers.arrayElement(users);
                 } while (usedUserIds.has(randomUser.id));
-                usedUserIds.add(randomUser.id); // Ajoute l'utilisateur dans le Set
+                usedUserIds.add(randomUser.id); // Adding this user to the set
 
                 return {
                   userId: randomUser.id,
@@ -252,7 +252,7 @@ async function main() {
                   ]),
                 };
               });
-            })(), // Appelle immédiatement la fonction pour générer les membres
+            })(), // Calling this function to generate group members
           },
         },
       });

@@ -12,10 +12,12 @@ import {
   TravelTypes,
 } from '@prisma/client';
 import { SearchGroupDto } from './dto/search-group.dto';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class GroupsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private readonly prismaService: PrismaService) {}
+
   create(createGroupDto: CreateGroupDto) {
     return 'This action adds a new group';
   }
@@ -81,7 +83,7 @@ export class GroupsService {
 
     // Récupérer les résultats avec pagination et tri
     const [groups, total] = await Promise.all([
-      this.prisma.group.findMany({
+      this.prismaService.group.findMany({
         where: {
           AND: filters,
         },
@@ -89,7 +91,7 @@ export class GroupsService {
         take: limit,
         orderBy: { dateFrom: 'asc' }, // Trie par dateFrom, de la plus proche à la plus éloignée
       }),
-      this.prisma.group.count({
+      this.prismaService.group.count({
         where: {
           AND: filters,
         },
@@ -103,8 +105,10 @@ export class GroupsService {
     return `This action returns all groups`;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} group`;
+  async findOne(groupWhereUniqueInput: Prisma.GroupWhereUniqueInput) {
+    return this.prismaService.group.findUnique({
+      where: groupWhereUniqueInput,
+    });
   }
 
   update(id: number, updateGroupDto: UpdateGroupDto) {
