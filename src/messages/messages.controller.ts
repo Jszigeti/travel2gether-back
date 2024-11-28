@@ -9,6 +9,7 @@ import {
   Req,
   ParseIntPipe,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { MessagesService } from './messages.service';
 import { CreateMessageDto } from './dto/create-message.dto';
@@ -59,6 +60,18 @@ export class MessagesController {
   findConversations(@Req() req: Request) {
     const userId = req.user.sub;
     return this.messagesService.findConversations(userId);
+  }
+
+  @Get('/group/:group_id')
+  async findGroupChat(
+    @Param('group_id', ParseIntPipe) groupId: number,
+    @Req() req: Request,
+  ) {
+    const group = await this.groupsService.findOne({ id: groupId });
+    if (!group) throw new NotFoundException('Group not found');
+    if (!group.members.some((member) => member.userId === req.user.sub))
+      throw new UnauthorizedException('User not found in group');
+    return this.messagesService.findGroupChat(groupId, req.user.sub);
   }
 
   @Get(':id')

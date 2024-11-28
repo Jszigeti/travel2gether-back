@@ -93,6 +93,39 @@ export class MessagesService {
     return conversations;
   }
 
+  async findGroupChat(groupReceiverId: number, userId: number) {
+    const groupChat = await this.prismaService.message.findMany({
+      where: { groupReceiverId },
+      select: {
+        id: true,
+        senderId: true,
+        content: true,
+        createdAt: true,
+        senderUser: {
+          select: {
+            userId: true,
+            pathPicture: true,
+            firstname: true,
+            lastname: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    return groupChat.map((message) => ({
+      id: message.id,
+      content: message.content,
+      createdAt: message.createdAt,
+      profile: {
+        id: message.senderId,
+        pathPicture: message.senderUser.pathPicture,
+        firstname: message.senderUser.firstname,
+        lastname: message.senderUser.lastname,
+        isSender: message.senderId === userId,
+      },
+    }));
+  }
+
   findOne(id: number) {
     return `This action returns a #${id} message`;
   }
