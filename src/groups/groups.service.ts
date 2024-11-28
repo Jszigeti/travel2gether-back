@@ -14,6 +14,9 @@ import {
 import { GroupWithMembers } from './interfaces/GroupWithMembers';
 import { GroupWithMembersAndStages } from './interfaces/GroupWithMembersAndStages';
 import { SearchGroupDto } from './dto/search-group.dto';
+import { time } from 'console';
+import { GroupCard } from './interfaces/GroupCard';
+import { addFilter } from 'utils/addFilter';
 
 @Injectable()
 export class GroupsService {
@@ -77,21 +80,8 @@ export class GroupsService {
 
   async search(
     query: SearchGroupDto,
-  ): Promise<{ groups: Group[]; total: number }> {
-    const filters = [];
-
-    // Ajout des critères dynamiques via une fonction utilitaire
-    const addFilter = (field: string, values: string[], column: string) => {
-      if (values?.length) {
-        filters.push({
-          OR: values.map((value) => ({
-            [field]: {
-              some: { [column]: value },
-            },
-          })),
-        });
-      }
-    };
+  ): Promise<{ groups: GroupCard[]; total: number }> {
+    const filters: Object[] = [];
 
     // Critère pour location (recherche partielle)
     if (query.location) {
@@ -103,7 +93,7 @@ export class GroupsService {
     }
 
     // Filtre pour dateFrom > aujourd'hui
-    // filters.push({ dateFrom: { gte: new Date() } });
+    filters.push({ dateFrom: { gte: new Date() } });
 
     // Critère pour dateFrom (date minimale fournie par l'utilisateur)
     if (query.dateFrom) {
@@ -116,10 +106,10 @@ export class GroupsService {
     }
 
     // Critères pour travelTypes, lodgings, languages, ageRanges
-    addFilter('travelTypes', query.travelTypes, 'travelType');
-    addFilter('lodgings', query.lodgings, 'lodging');
-    addFilter('languages', query.languages, 'language');
-    addFilter('ageRanges', query.ageRanges, 'ageRange');
+    addFilter(filters, 'travelTypes', query.travelTypes, 'travelType');
+    addFilter(filters, 'lodgings', query.lodgings, 'lodging');
+    addFilter(filters, 'languages', query.languages, 'language');
+    addFilter(filters, 'ageRanges', query.ageRanges, 'ageRange');
 
     // Critères simples pour budget et gender
     if (query.budget) {
@@ -140,6 +130,16 @@ export class GroupsService {
         where: {
           AND: filters,
         },
+        include: {
+          members: {
+            select: {
+              role: true,
+              status: true,
+              user: { select: { pathPicture: true } },
+            },
+            where: { status: 'ACCEPTED' },
+          },
+        },
         skip,
         take: limit,
         orderBy: { dateFrom: 'asc' }, // Trie par dateFrom, de la plus proche à la plus éloignée
@@ -151,11 +151,22 @@ export class GroupsService {
       }),
     ]);
 
-    return { groups, total };
-  }
-
-  findAll() {
-    return `This action returns all groups`;
+    return {
+      groups: groups.map((group) => ({
+        id: group.id,
+        title: group.title,
+        location: group.location,
+        dateFrom: group.dateFrom,
+        dateTo: group.dateTo,
+        pathPicture: group.pathPicture,
+        members: group.members.slice(0, 3).map((member) => ({
+          role: member.role,
+          status: member.status,
+          pathPicture: member.user.pathPicture,
+        })),
+      })),
+      total,
+    };
   }
 
   async update(id: number, body: UpdateGroupDto): Promise<Group> {

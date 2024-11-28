@@ -87,16 +87,6 @@ export class GroupsController {
     return 'Group successfully updated';
   }
 
-  // @Get()
-  // findAll() {
-  //   return this.groupsService.findAll();
-  // }
-
-  // @Get(':id')
-  // findOne(@Param('id') id: Prisma.GroupWhereUniqueInput) {
-  //   return this.groupsService.findOne(id);
-  // }
-
   @Delete(':groupId')
   async delete(
     @Req() req: Request,
