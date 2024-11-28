@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { NotificationReferenceType, PrismaClient } from '@prisma/client';
 import { faker } from '@faker-js/faker';
 
 const prisma = new PrismaClient();
@@ -8,6 +8,10 @@ async function main() {
   await prisma.token.deleteMany();
   await prisma.profile.deleteMany();
   await prisma.user.deleteMany();
+  await prisma.group.deleteMany();
+  await prisma.stage.deleteMany();
+  await prisma.notification.deleteMany();
+  await prisma.message.deleteMany();
   console.log('Database cleaned.');
   console.log('Seeding database...');
 
@@ -229,7 +233,7 @@ async function main() {
               const usedUserIds = new Set<number>(); // Garde une trace des utilisateurs déjà ajoutés
 
               return Array.from({
-                length: faker.number.int({ min: 1, max: 6 }),
+                length: faker.number.int({ min: 3, max: 10 }),
               }).map(() => {
                 let randomUser;
                 // Boucle jusqu'à obtenir un utilisateur unique pour ce groupe
@@ -260,6 +264,138 @@ async function main() {
   );
 
   console.log(`${groups.length} groups seeded.`);
+
+  // Seed Stages (2-5 stages per group)
+  const stages = await Promise.all(
+    groups.map(async (group) => {
+      const stageCount = faker.number.int({ min: 2, max: 5 }); // Between 2 and 5 stages per group
+      return Promise.all(
+        Array.from({ length: stageCount }).map(async () => {
+          return await prisma.stage.create({
+            data: {
+              title: faker.lorem.words(3),
+              description: faker.lorem.paragraph(),
+              dateFrom: faker.date.soon(),
+              dateTo: faker.date.future(),
+              address: faker.address.streetAddress(),
+              longitude: faker.address.longitude(),
+              latitude: faker.address.latitude(),
+              groupId: group.id,
+              pathPicture: faker.image.url(),
+            },
+          });
+        }),
+      );
+    }),
+  );
+
+  console.log(`Stages seeded for each group.`);
+
+  const groupsWithMembers = await prisma.group.findMany({
+    include: {
+      members: {
+        include: { user: true },
+      },
+    },
+  });
+
+  // Création des notifications pour chaque groupe
+  for (const group of groupsWithMembers) {
+    const groupMembers = group.members.map((member) => member.user);
+
+    // Notifications pour chaque membre du groupe
+    for (const user of groupMembers) {
+      // On crée des notifications pour des événements fictifs
+      const notificationsData = [
+        {
+          referenceId: group.id,
+          referenceType: NotificationReferenceType.GROUP_MODIFICATION,
+          details: `Votre groupe ${group.title} a été modifié.`,
+        },
+        {
+          referenceId: group.id,
+          referenceType: NotificationReferenceType.GROUP_INVITATION,
+          details: `Vous avez été invité à rejoindre le groupe ${group.title}.`,
+        },
+        {
+          referenceId: group.id,
+          referenceType: NotificationReferenceType.GROUP_STATUS_UPDATE,
+          details: `Le statut de votre groupe ${group.title} a changé.`,
+        },
+        {
+          referenceId: group.id,
+          referenceType: NotificationReferenceType.GROUP_ROLE_UPDATE,
+          details: `Votre rôle dans le groupe ${group.title} a été mis à jour.`,
+        },
+        {
+          referenceId: group.id,
+          referenceType: NotificationReferenceType.GROUP_MESSAGE,
+          details: `Un nouveau message a été posté dans le groupe ${group.title}.`,
+        },
+      ];
+
+      // Enregistrement des notifications dans la base de données
+      for (const notification of notificationsData) {
+        await prisma.notification.create({
+          data: {
+            userId: user.userId,
+            referenceId: notification.referenceId,
+            referenceType: notification.referenceType,
+            details: notification.details,
+            isRead: faker.datatype.boolean(), // Peut être true ou false aléatoirement
+          },
+        });
+      }
+    }
+  }
+
+  console.log('Notifications seeded.');
+
+  // Génération des messages privés (entre utilisateurs)
+  const privateMessages = Array.from({ length: 500 }).map(() => {
+    const sender = faker.helpers.arrayElement(users);
+    let receiver;
+
+    // Assure que le récepteur est différent de l'émetteur
+    do {
+      receiver = faker.helpers.arrayElement(users);
+    } while (receiver.id === sender.id);
+
+    return {
+      content: faker.lorem.sentence({ min: 5, max: 20 }),
+      senderId: sender.id,
+      userReceiverId: receiver.id,
+    };
+  });
+
+  // Génération des messages de groupe
+  const groupMessages = groupsWithMembers.flatMap((group) => {
+    const groupMembers = group.members;
+
+    // Assure que le groupe a des membres pour poster des messages
+    if (groupMembers.length === 0) return [];
+
+    return Array.from({ length: faker.number.int({ min: 10, max: 30 }) }).map(
+      () => {
+        const sender = faker.helpers.arrayElement(groupMembers);
+
+        return {
+          content: faker.lorem.sentence({ min: 5, max: 20 }),
+          senderId: sender.userId,
+          groupReceiverId: group.id,
+        };
+      },
+    );
+  });
+
+  // Insertion des messages dans la base de données
+  await prisma.message.createMany({
+    data: [...privateMessages, ...groupMessages],
+  });
+
+  console.log(
+    `${privateMessages.length} private messages and ${groupMessages.length} group messages seeded.`,
+  );
 }
 
 main()

@@ -16,7 +16,8 @@ import { UpdateUserDto } from './dto/update-user.dto';
 export class UsersService {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async findUser(
+  // User functions
+  async findOne(
     userWhereUniqueInput: Prisma.UserWhereUniqueInput,
   ): Promise<UserWithName> {
     const user = await this.prismaService.user.findUnique({
@@ -34,6 +35,39 @@ export class UsersService {
     };
   }
 
+  async update(id: number, body: UpdateUserDto): Promise<string> {
+    const { email, firstname, lastname, password } = body;
+    await this.prismaService.user.update({
+      where: { id },
+      data: { email, password, profile: { update: { firstname, lastname } } },
+    });
+    return 'User successfully updated';
+  }
+
+  async updateStatus(id: number, status: UserStatus): Promise<string> {
+    await this.prismaService.user.update({
+      where: { id },
+      data: { status },
+    });
+    return 'User status edited successfully';
+  }
+
+  async resetPassword(id: number, password: string): Promise<string> {
+    await this.prismaService.user.update({
+      where: { id },
+      data: { password },
+    });
+    return 'User password reset successfully';
+  }
+
+  async delete(id: number): Promise<string> {
+    await this.prismaService.user.delete({
+      where: { id },
+    });
+    return 'User successfully deleted';
+  }
+
+  // Profile functions
   async findProfile(
     profileWhereUniqueInput: Prisma.ProfileWhereUniqueInput,
   ): Promise<Profile> {
@@ -93,32 +127,7 @@ export class UsersService {
     };
   }
 
-  async editUserStatus(id: number, status: UserStatus): Promise<string> {
-    await this.prismaService.user.update({
-      where: { id },
-      data: { status },
-    });
-    return 'User status edited successfully';
-  }
-
-  async resetUserPassword(id: number, password: string): Promise<string> {
-    await this.prismaService.user.update({
-      where: { id },
-      data: { password },
-    });
-    return 'User password reset successfully';
-  }
-
-  async patchUser(id: number, body: UpdateUserDto): Promise<string> {
-    const { email, firstname, lastname, password } = body;
-    await this.prismaService.user.update({
-      where: { id },
-      data: { email, password, profile: { update: { firstname, lastname } } },
-    });
-    return 'User successfully updated';
-  }
-
-  async patchProfile(userId: number, body: UpdateProfileDto): Promise<string> {
+  async updateProfile(userId: number, body: UpdateProfileDto): Promise<string> {
     const relations = [
       { key: 'interests', table: 'profileInterests', field: 'interest' },
       { key: 'spokenLanguages', table: 'profileLanguages', field: 'language' },
@@ -149,12 +158,5 @@ export class UsersService {
       },
     });
     return 'Profile successfully updated';
-  }
-
-  async deleteUser(id: number): Promise<string> {
-    await this.prismaService.user.delete({
-      where: { id },
-    });
-    return 'User successfully deleted';
   }
 }

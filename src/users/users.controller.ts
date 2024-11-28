@@ -22,23 +22,14 @@ import * as bcrypt from 'bcrypt';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @Public()
-  @Get(':userId/profile')
-  async findProfile(
-    @Param('userId', ParseIntPipe) userId: number,
-  ): Promise<ProfileDetails> {
-    const profile = await this.usersService.getProfile({ userId });
-    if (!profile) throw new NotFoundException('User not found');
-    return profile;
-  }
-
+  // User endpoints
   @Patch()
-  async patchUser(
+  async updateUser(
     @Req() req: Request,
     @Body() body: UpdateUserDto,
   ): Promise<string> {
     // Check if user exists
-    const user = await this.usersService.findUser({ id: req.user.sub });
+    const user = await this.usersService.findOne({ id: req.user.sub });
     if (!user) throw new NotFoundException('User not found');
     // If password update check if old password match
     if (body.password) {
@@ -50,26 +41,14 @@ export class UsersController {
     const { oldPassword, ...updatedBody } = body;
     // If email update check if email already exists
     if (body.email) {
-      const existingUser = await this.usersService.findUser({
+      const existingUser = await this.usersService.findOne({
         email: body.email,
       });
       if (existingUser && existingUser.id !== req.user.sub)
         throw new UnauthorizedException('New email already exists');
     }
     // Update user and return success message
-    return this.usersService.patchUser(req.user.sub, updatedBody);
-  }
-
-  @Patch('/profile')
-  async patchProfile(
-    @Req() req: Request,
-    @Body() body: UpdateProfileDto,
-  ): Promise<string> {
-    // Check if user exists
-    if (!(await this.usersService.findProfile({ userId: req.user.sub })))
-      throw new NotFoundException('User not found');
-    // Update profile and return success message
-    return this.usersService.patchProfile(req.user.sub, body);
+    return this.usersService.update(req.user.sub, updatedBody);
   }
 
   @Delete()
@@ -78,6 +57,29 @@ export class UsersController {
     if (!(await this.usersService.findProfile({ userId: req.user.sub })))
       throw new NotFoundException('User not found');
     // Delete user and return success message
-    return this.usersService.deleteUser(req.user.sub);
+    return this.usersService.delete(req.user.sub);
+  }
+
+  // Profile endpoints
+  @Public()
+  @Get(':userId/profile')
+  async getOne(
+    @Param('userId', ParseIntPipe) userId: number,
+  ): Promise<ProfileDetails> {
+    const profile = await this.usersService.getProfile({ userId });
+    if (!profile) throw new NotFoundException('User not found');
+    return profile;
+  }
+
+  @Patch('/profile')
+  async update(
+    @Req() req: Request,
+    @Body() body: UpdateProfileDto,
+  ): Promise<string> {
+    // Check if user exists
+    if (!(await this.usersService.findProfile({ userId: req.user.sub })))
+      throw new NotFoundException('User not found');
+    // Update profile and return success message
+    return this.usersService.updateProfile(req.user.sub, body);
   }
 }
