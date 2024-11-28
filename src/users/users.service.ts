@@ -1,14 +1,23 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { Prisma, UserStatus } from '@prisma/client';
+import {
+  Budget,
+  Prisma,
+  Profile,
+  ProfileGender,
+  UserStatus,
+} from '@prisma/client';
 import { UserWithName } from './interfaces/UserWithName';
 import { ProfileDetails } from './interfaces/ProfileDetails';
+import { UpdateProfileDto } from './dto/update-profile.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UsersService {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async findUser(
+  // User functions
+  async findOne(
     userWhereUniqueInput: Prisma.UserWhereUniqueInput,
   ): Promise<UserWithName> {
     const user = await this.prismaService.user.findUnique({
@@ -26,9 +35,52 @@ export class UsersService {
     };
   }
 
-  async findProfile(userId: number): Promise<ProfileDetails> {
+  async update(id: number, body: UpdateUserDto): Promise<string> {
+    const { email, firstname, lastname, password } = body;
+    await this.prismaService.user.update({
+      where: { id },
+      data: { email, password, profile: { update: { firstname, lastname } } },
+    });
+    return 'User successfully updated';
+  }
+
+  async updateStatus(id: number, status: UserStatus): Promise<string> {
+    await this.prismaService.user.update({
+      where: { id },
+      data: { status },
+    });
+    return 'User status edited successfully';
+  }
+
+  async resetPassword(id: number, password: string): Promise<string> {
+    await this.prismaService.user.update({
+      where: { id },
+      data: { password },
+    });
+    return 'User password reset successfully';
+  }
+
+  async delete(id: number): Promise<string> {
+    await this.prismaService.user.delete({
+      where: { id },
+    });
+    return 'User successfully deleted';
+  }
+
+  // Profile functions
+  async findProfile(
+    profileWhereUniqueInput: Prisma.ProfileWhereUniqueInput,
+  ): Promise<Profile> {
+    return this.prismaService.profile.findUnique({
+      where: profileWhereUniqueInput,
+    });
+  }
+
+  async getProfile(
+    profileWhereUniqueInput: Prisma.ProfileWhereUniqueInput,
+  ): Promise<ProfileDetails> {
     const profile = await this.prismaService.profile.findUnique({
-      where: { userId },
+      where: profileWhereUniqueInput,
       include: {
         travelTypes: { select: { travelType: true } },
         lodgings: { select: { lodging: true } },
@@ -75,19 +127,36 @@ export class UsersService {
     };
   }
 
-  async editUserStatus(id: number, status: UserStatus): Promise<string> {
-    await this.prismaService.user.update({
-      where: { id },
-      data: { status },
+  async updateProfile(userId: number, body: UpdateProfileDto): Promise<string> {
+    const relations = [
+      { key: 'interests', table: 'profileInterests', field: 'interest' },
+      { key: 'spokenLanguages', table: 'profileLanguages', field: 'language' },
+      { key: 'travelTypes', table: 'profileTravelTypes', field: 'travelType' },
+      { key: 'lodgings', table: 'profileLodgings', field: 'lodging' },
+      {
+        key: 'tripDurations',
+        table: 'profileTripDurations',
+        field: 'tripDuration',
+      },
+    ];
+    const updates = relations.flatMap(({ key, table, field }) => {
+      const items = body[key as keyof UpdateProfileDto] as string[] | undefined;
+      if (!items) return [];
+      return [
+        this.prismaService[table].deleteMany({ where: { userId } }),
+        this.prismaService[table].createMany({
+          body: items.map((item) => ({ userId, [field]: item })),
+        }),
+      ];
     });
-    return 'User status edited successfully';
-  }
-
-  async resetUserPassword(id: number, password: string): Promise<string> {
-    await this.prismaService.user.update({
-      where: { id },
-      data: { password },
+    await this.prismaService.$transaction(updates);
+    await this.prismaService.profile.update({
+      where: { userId },
+      data: {
+        budget: body.budget ? (body.budget[0] as Budget) : undefined,
+        gender: body.gender ? (body.gender[0] as ProfileGender) : undefined,
+      },
     });
-    return 'User password reset successfully';
+    return 'Profile successfully updated';
   }
 }

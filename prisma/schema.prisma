@@ -121,7 +121,8 @@ model Notification {
   id                    Int                       @id @default(autoincrement())
   userId                Int                       @map("user_id")
   referenceId           Int                       @map("reference_id")
-  referenceType         ReferenceType             @map("reference_type")
+  referenceType         NotificationReferenceType @map("reference_type")
+  details               String                    @db.VarChar(255)
   isRead                Boolean                   @default(false) @map("is_read")
   createdAt             DateTime                  @map("created_at") @default(now())
   updatedAt             DateTime                  @map("updated_at") @updatedAt
@@ -357,8 +358,14 @@ enum GroupGender {
   MIXED
 }
 
-enum ReferenceType {
+enum NotificationReferenceType {
   PRIVATE_MESSAGE
   GROUP_MESSAGE
   GROUP_MODIFICATION
+  GROUP_DELETE
+  GROUP_INVITATION
+  GROUP_STATUS_UPDATE
+  GROUP_ROLE_UPDATE
+  GROUP_REQUEST
+  GROUP_NEW_MEMBER
 }

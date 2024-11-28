@@ -38,7 +38,7 @@ export class AuthController {
     // Body destructuring
     const { email, password } = body;
     // Check if email already exists
-    if (await this.usersService.findUser({ email }))
+    if (await this.usersService.findOne({ email }))
       throw new ConflictException('Email already exists');
     // Hash password and create user with profile
     const user = await this.authService.createUserWithProfile({
@@ -62,7 +62,7 @@ export class AuthController {
   @Post('signin')
   async signin(@Body() body: SigninDto): Promise<UserIdWithTokens> {
     // Check if user exists
-    const user = await this.usersService.findUser({ email: body.email });
+    const user = await this.usersService.findOne({ email: body.email });
     if (!user) throw new UnauthorizedException('Bad credentials');
     // Compare passwords
     if (!(await bcrypt.compare(body.password, user.password)))
@@ -147,7 +147,7 @@ export class AuthController {
     if (!(await bcrypt.compare(verificationToken, savedToken.token)))
       throw new UnauthorizedException();
     // Edit user status
-    await this.usersService.editUserStatus(userId, UserStatus.VERIFIED);
+    await this.usersService.updateStatus(userId, UserStatus.VERIFIED);
     await this.authService.deleteToken(userId, TokenType.VERIFICATION);
     // Return success message
     return 'User validated';
@@ -157,7 +157,7 @@ export class AuthController {
   @Post('forgot')
   async forgotPassword(@Body() body: { email: string }): Promise<string> {
     // Retrieve user with email
-    const user = await this.usersService.findUser(body);
+    const user = await this.usersService.findOne(body);
     // Throw fake success if no user in DB
     if (!user) return 'Email with instructions send, please check your mails';
     // Generate reset token
@@ -202,7 +202,7 @@ export class AuthController {
     if (!(await bcrypt.compare(passwordResetToken, savedToken.token)))
       throw new UnauthorizedException();
     // Edit user password
-    await this.usersService.resetUserPassword(
+    await this.usersService.resetPassword(
       userId,
       await bcrypt.hash(body.password, 10),
     );

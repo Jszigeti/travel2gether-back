@@ -1,32 +1,32 @@
 import {
-  AgeRanges,
   Budget,
-  GroupGender,
+  Interests,
   Languages,
   Lodgings,
+  ProfileGender,
   TravelTypes,
+  TripDurations,
 } from '@prisma/client';
 import {
   IsArray,
   IsEnum,
+  IsDate,
   IsString,
+  MaxLength,
   IsUrl,
   IsDateString,
   IsOptional,
 } from 'class-validator';
 
-export class UpdateGroupDto {
+export class UpdateProfileDto {
   @IsOptional()
-  @IsString()
-  title?: string;
+  @IsDateString()
+  birthdate?: string;
 
   @IsOptional()
-  @IsString()
-  description?: string;
-
-  @IsOptional()
-  @IsString()
-  location?: string;
+  @IsArray()
+  @IsEnum(ProfileGender, { each: true })
+  gender?: ProfileGender[];
 
   @IsOptional()
   @IsString()
@@ -34,17 +34,19 @@ export class UpdateGroupDto {
   pathPicture?: string;
 
   @IsOptional()
-  @IsDateString()
-  dateFrom?: string;
-
-  @IsOptional()
-  @IsDateString()
-  dateTo?: string;
+  @IsString()
+  @MaxLength(2000)
+  description?: string;
 
   @IsOptional()
   @IsArray()
-  @IsEnum(GroupGender, { each: true })
-  gender?: GroupGender[];
+  @IsEnum(Interests, { each: true })
+  interests?: Interests[];
+
+  @IsOptional()
+  @IsArray()
+  @IsEnum(Languages, { each: true })
+  spokenLanguages?: Languages[];
 
   @IsOptional()
   @IsArray()
@@ -62,12 +64,15 @@ export class UpdateGroupDto {
   lodgings?: Lodgings[];
 
   @IsOptional()
-  @IsArray()
-  @IsEnum(Languages, { each: true })
-  spokenLanguages?: Languages[];
+  @IsDate()
+  availableFrom?: string;
+
+  @IsOptional()
+  @IsDate()
+  availableTo?: string;
 
   @IsOptional()
   @IsArray()
-  @IsEnum(AgeRanges, { each: true })
-  ageRanges?: AgeRanges[];
+  @IsEnum(TripDurations, { each: true })
+  tripDurations?: TripDurations[];
 }

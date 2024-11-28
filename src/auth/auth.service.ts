@@ -16,6 +16,7 @@ export class AuthService {
     private readonly emailService: EmailService,
   ) {}
 
+  // Auth functions
   async createUserWithProfile(body: SignupDto): Promise<User> {
     return this.prismaService.user.create({
       data: {
