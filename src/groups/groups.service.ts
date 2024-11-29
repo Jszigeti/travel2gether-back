@@ -109,7 +109,7 @@ export class GroupsService {
     }
 
     // Filtre pour dateFrom > aujourd'hui
-    // filters.push({ dateFrom: { gte: new Date() } });
+    filters.push({ dateFrom: { gte: new Date() } });
 
     // Critère pour dateFrom (date minimale fournie par l'utilisateur)
     if (query.dateFrom) {
@@ -148,12 +148,17 @@ export class GroupsService {
         },
         include: {
           members: {
+            where: { status: 'ACCEPTED' },
             select: {
               role: true,
               status: true,
-              user: { select: { pathPicture: true } },
+              user: {
+                select: {
+                  pathPicture: true,
+                },
+              },
             },
-            where: { status: 'ACCEPTED' },
+            take: 3, // Limiter à 3 membres dans Prisma
           },
         },
         skip,
@@ -179,7 +184,7 @@ export class GroupsService {
         dateFrom: group.dateFrom,
         dateTo: group.dateTo,
         pathPicture: group.pathPicture,
-        members: group.members.slice(0, 3).map((member) => ({
+        members: group.members.map((member) => ({
           role: member.role,
           status: member.status,
           pathPicture: member.user.pathPicture,
