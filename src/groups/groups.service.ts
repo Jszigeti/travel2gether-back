@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { UpdateGroupDto } from './dto/update-group.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -9,6 +13,7 @@ import {
   GroupRole,
   GroupUser,
   GroupUserStatus,
+  Media,
   Prisma,
 } from '@prisma/client';
 import { GroupWithMembers } from './interfaces/GroupWithMembers';
@@ -263,7 +268,7 @@ export class GroupsService {
   }
 
   // Utils functions
-  async checkIfUserIsAuthorized(
+  async IsUserAuthorized(
     group: GroupWithMembers,
     userId: number,
     checkAuthor: boolean = false,
@@ -273,5 +278,26 @@ export class GroupsService {
       if (checkAuthor) return member.role === 'AUTHOR';
       return member.role !== 'TRAVELER' && member.status !== 'DENIED';
     });
+  }
+
+  async isUserInGroup(groupId: number, userId: number): Promise<void> {
+    const group = await this.findOne({ id: groupId });
+    if (!group) throw new NotFoundException('Group not found');
+    if (!group.members.some((member) => member.userId === userId))
+      throw new UnauthorizedException("User isn't in group");
+  }
+
+  async canDeleteMedia(media: Media, userId: number): Promise<void> {
+    const group = await this.findOne({ id: media.groupId });
+    if (!group) throw new NotFoundException('Group not found');
+    if (
+      !(
+        media.userId === userId ||
+        group.members.some(
+          (member) => member.role === 'AUTHOR' || member.role === 'ORGANIZER',
+        )
+      )
+    )
+      throw new UnauthorizedException("User can't delete media");
   }
 }

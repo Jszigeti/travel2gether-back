@@ -3,16 +3,13 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
-  Delete,
   Req,
   ParseIntPipe,
   NotFoundException,
 } from '@nestjs/common';
 import { MessagesService } from './messages.service';
 import { CreateMessageDto } from './dto/create-message.dto';
-import { UpdateMessageDto } from './dto/update-message.dto';
 import { request, Request } from 'express';
 import { UsersService } from 'src/users/users.service';
 import { GroupsService } from 'src/groups/groups.service';
@@ -59,20 +56,5 @@ export class MessagesController {
   findConversations(@Req() req: Request) {
     const userId = req.user.sub;
     return this.messagesService.findConversations(userId);
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.messagesService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateMessageDto: UpdateMessageDto) {
-    return this.messagesService.update(+id, updateMessageDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.messagesService.remove(+id);
   }
 }

@@ -45,8 +45,8 @@ async function main() {
                 'HIGH',
                 'LUXURY',
               ]),
-              availableFrom: faker.date.soon(),
-              availableTo: faker.date.future(),
+              availableFrom: faker.date.soon().toDateString(),
+              availableTo: faker.date.future().toDateString(),
               lodgings: {
                 createMany: {
                   data: faker.helpers
@@ -152,8 +152,8 @@ async function main() {
           title: faker.lorem.words(3),
           description: faker.lorem.paragraph(),
           location: faker.location.streetAddress(),
-          dateFrom: faker.date.soon(),
-          dateTo: faker.date.future(),
+          dateFrom: faker.date.soon().toDateString(),
+          dateTo: faker.date.future().toDateString(),
           pathPicture: faker.image.url(),
           status: faker.helpers.arrayElement([
             'PENDING',
@@ -276,8 +276,8 @@ async function main() {
             data: {
               title: faker.lorem.words(3),
               description: faker.lorem.paragraph(),
-              dateFrom: faker.date.soon(),
-              dateTo: faker.date.future(),
+              dateFrom: faker.date.soon().toDateString(),
+              dateTo: faker.date.future().toDateString(),
               address: faker.location.streetAddress(),
               longitude: faker.location.longitude(),
               latitude: faker.location.latitude(),

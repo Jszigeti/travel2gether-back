@@ -4,8 +4,8 @@ export interface GroupCard {
   id: number;
   title: string;
   location: string;
-  dateFrom: Date;
-  dateTo: Date;
+  dateFrom: string;
+  dateTo: string;
   pathPicture: string;
   members: {
     role: GroupRole;

@@ -3,7 +3,7 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { GroupsModule } from './groups/groups.module';
 import { StagesModule } from './stages/stages.module';
-import { MediaModule } from './media/media.module';
+import { MediasModule } from './medias/medias.module';
 import { ChecklistModule } from './checklist/checklist.module';
 import { ModerationsModule } from './moderations/moderations.module';
 import { NotificationsModule } from './notifications/notifications.module';
@@ -20,7 +20,7 @@ import { EmailModule } from './email/email.module';
     UsersModule,
     GroupsModule,
     StagesModule,
-    MediaModule,
+    MediasModule,
     ChecklistModule,
     ModerationsModule,
     NotificationsModule,

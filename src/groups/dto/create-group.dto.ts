@@ -1,4 +1,10 @@
-import { IsDate, IsNotEmpty, IsString, IsUrl } from 'class-validator';
+import {
+  IsDate,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsUrl,
+} from 'class-validator';
 
 export class CreateGroupDto {
   @IsNotEmpty()
@@ -13,16 +19,15 @@ export class CreateGroupDto {
   @IsString()
   location: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
-  @IsUrl()
   pathPicture: string;
 
   @IsNotEmpty()
-  @IsDate()
+  @IsString()
   dateFrom: string;
 
   @IsNotEmpty()
-  @IsDate()
+  @IsString()
   dateTo: string;
 }
