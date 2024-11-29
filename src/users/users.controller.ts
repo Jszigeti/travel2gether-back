@@ -7,6 +7,7 @@ import {
   Param,
   ParseIntPipe,
   Patch,
+  Query,
   Req,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -17,10 +18,18 @@ import { Request } from 'express';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import * as bcrypt from 'bcrypt';
+import { SearchUserDto } from './dto/search-user.dto';
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
+
+  // Search users
+  @Public()
+  @Get('search')
+  async search(@Query() query: SearchUserDto) {
+    return this.usersService.search(query);
+  }
 
   // User endpoints
   @Patch()

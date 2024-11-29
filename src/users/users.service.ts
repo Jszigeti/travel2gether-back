@@ -11,10 +11,94 @@ import { UserWithName } from './interfaces/UserWithName';
 import { ProfileDetails } from './interfaces/ProfileDetails';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { SearchUserDto } from './dto/search-user.dto';
+import { addFilter } from 'utils/addFilter';
+import { UserAvatar } from './interfaces/userAvatar';
 
 @Injectable()
 export class UsersService {
   constructor(private readonly prismaService: PrismaService) {}
+
+  // Search users
+  async search(query: SearchUserDto): Promise<{
+    users: UserAvatar[];
+    total: number;
+    currentPage: number;
+    totalPages: number;
+    hasNextPage: boolean;
+  }> {
+    const filters = [];
+
+    // Ajout des filtres via la fonction utilitaire
+    addFilter(filters, 'travelTypes', query.travelTypes, 'travelType');
+    addFilter(filters, 'interests', query.interests, 'interest');
+    addFilter(filters, 'tripDurations', query.tripDurations, 'tripDuration');
+    addFilter(filters, 'lodgings', query.lodgings, 'lodging');
+    addFilter(filters, 'languages', query.languages, 'language');
+
+    // Filtre pour budget et genre
+    if (query.budget) {
+      filters.push({ budget: query.budget });
+    }
+    if (query.gender) {
+      filters.push({ gender: query.gender });
+    }
+
+    // Filtre pour le statut VERIFIED
+    filters.push({ user: { status: UserStatus.VERIFIED } });
+
+    // Gestion de la pagination
+    const page = query.page || 1;
+    const limit = query.limit || 10;
+    const skip = (page - 1) * limit;
+
+    // Récupérer les résultats avec pagination et champs spécifiques
+    const [users, total] = await Promise.all([
+      this.prismaService.profile.findMany({
+        where: {
+          AND: filters,
+        },
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        select: {
+          userId: true,
+          firstname: true,
+          lastname: true,
+          pathPicture: true,
+          user: {
+            select: {
+              status: true,
+            },
+          },
+        },
+      }),
+      this.prismaService.profile.count({
+        where: {
+          AND: filters,
+        },
+      }),
+    ]);
+
+    const totalPages = Math.ceil(total / limit);
+    const hasNextPage = skip + limit < total;
+
+    const formattedUsers = users.map((user) => ({
+      userId: user.userId,
+      firstname: user.firstname,
+      lastname: user.lastname,
+      pathPicture: user.pathPicture,
+      status: user.user.status, // Accès au statut depuis la relation
+    }));
+
+    return {
+      users: formattedUsers,
+      total,
+      currentPage: page,
+      totalPages,
+      hasNextPage,
+    };
+  }
 
   // User functions
   async findOne(

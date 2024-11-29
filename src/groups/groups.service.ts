@@ -122,21 +122,10 @@ export class GroupsService {
     }
 
     // Critères pour relations
-    const addFilter = (field: string, values: string[], column: string) => {
-      if (values?.length) {
-        filters.push({
-          OR: values.map((value) => ({
-            [field]: {
-              some: { [column]: value },
-            },
-          })),
-        });
-      }
-    };
-    addFilter('travelTypes', query.travelTypes, 'travelType');
-    addFilter('lodgings', query.lodgings, 'lodging');
-    addFilter('languages', query.languages, 'language');
-    addFilter('ageRanges', query.ageRanges, 'ageRange');
+    addFilter(filters, 'travelTypes', query.travelTypes, 'travelType');
+    addFilter(filters, 'lodgings', query.lodgings, 'lodging');
+    addFilter(filters, 'languages', query.languages, 'language');
+    addFilter(filters, 'ageRanges', query.ageRanges, 'ageRange');
 
     // Critères simples pour budget et gender
     if (query.budget) {
