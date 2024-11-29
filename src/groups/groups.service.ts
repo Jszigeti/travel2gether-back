@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { UpdateGroupDto } from './dto/update-group.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -78,10 +78,26 @@ export class GroupsService {
     }
   }
 
-  async search(
-    query: SearchGroupDto,
-  ): Promise<{ groups: GroupCard[]; total: number }> {
+  async search(query: SearchGroupDto): Promise<{
+    groups: GroupCard[];
+    total: number;
+    currentPage: number;
+    totalPages: number;
+    hasNextPage: boolean;
+  }> {
     const filters: Object[] = [];
+
+    // Vérification : dateTo > dateFrom
+    if (
+      query.dateFrom &&
+      query.dateTo &&
+      new Date(query.dateTo) <= new Date(query.dateFrom)
+    ) {
+      throw new HttpException(
+        'dateTo must be later than dateFrom',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
 
     // Critère pour location (recherche partielle)
     if (query.location) {
@@ -93,7 +109,7 @@ export class GroupsService {
     }
 
     // Filtre pour dateFrom > aujourd'hui
-    filters.push({ dateFrom: { gte: new Date() } });
+    // filters.push({ dateFrom: { gte: new Date() } });
 
     // Critère pour dateFrom (date minimale fournie par l'utilisateur)
     if (query.dateFrom) {
@@ -105,11 +121,22 @@ export class GroupsService {
       filters.push({ dateTo: { lte: new Date(query.dateTo) } });
     }
 
-    // Critères pour travelTypes, lodgings, languages, ageRanges
-    addFilter(filters, 'travelTypes', query.travelTypes, 'travelType');
-    addFilter(filters, 'lodgings', query.lodgings, 'lodging');
-    addFilter(filters, 'languages', query.languages, 'language');
-    addFilter(filters, 'ageRanges', query.ageRanges, 'ageRange');
+    // Critères pour relations
+    const addFilter = (field: string, values: string[], column: string) => {
+      if (values?.length) {
+        filters.push({
+          OR: values.map((value) => ({
+            [field]: {
+              some: { [column]: value },
+            },
+          })),
+        });
+      }
+    };
+    addFilter('travelTypes', query.travelTypes, 'travelType');
+    addFilter('lodgings', query.lodgings, 'lodging');
+    addFilter('languages', query.languages, 'language');
+    addFilter('ageRanges', query.ageRanges, 'ageRange');
 
     // Critères simples pour budget et gender
     if (query.budget) {
@@ -151,6 +178,10 @@ export class GroupsService {
       }),
     ]);
 
+    // Calcul des métadonnées de pagination
+    const totalPages = Math.ceil(total / limit);
+    const hasNextPage = skip + limit < total;
+
     return {
       groups: groups.map((group) => ({
         id: group.id,
@@ -166,6 +197,9 @@ export class GroupsService {
         })),
       })),
       total,
+      currentPage: page,
+      totalPages,
+      hasNextPage,
     };
   }
 
