@@ -10,8 +10,8 @@ export interface ProfileDetails {
     pathPicture: string | null;
     description: string | null;
     budget: Budget | null;
-    availableFrom: Date | null;
-    availableTo: Date | null;
+    availableFrom: string | null;
+    availableTo: string | null;
     averageRating: number | null;
     ratings: number | null;
     travelTypes: string[];
@@ -24,8 +24,8 @@ export interface ProfileDetails {
       id: number;
       title: string;
       location: string;
-      dateFrom: Date;
-      dateTo: Date;
+      dateFrom: string;
+      dateTo: string;
     }[];
   };
 }

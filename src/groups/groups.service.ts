@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { UpdateGroupDto } from './dto/update-group.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -78,10 +78,26 @@ export class GroupsService {
     }
   }
 
-  async search(
-    query: SearchGroupDto,
-  ): Promise<{ groups: GroupCard[]; total: number }> {
+  async search(query: SearchGroupDto): Promise<{
+    groups: GroupCard[];
+    total: number;
+    currentPage: number;
+    totalPages: number;
+    hasNextPage: boolean;
+  }> {
     const filters: Object[] = [];
+
+    // Vérification : dateTo > dateFrom
+    if (
+      query.dateFrom &&
+      query.dateTo &&
+      new Date(query.dateTo) <= new Date(query.dateFrom)
+    ) {
+      throw new HttpException(
+        'dateTo must be later than dateFrom',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
 
     // Critère pour location (recherche partielle)
     if (query.location) {
@@ -105,7 +121,7 @@ export class GroupsService {
       filters.push({ dateTo: { lte: new Date(query.dateTo) } });
     }
 
-    // Critères pour travelTypes, lodgings, languages, ageRanges
+    // Critères pour relations
     addFilter(filters, 'travelTypes', query.travelTypes, 'travelType');
     addFilter(filters, 'lodgings', query.lodgings, 'lodging');
     addFilter(filters, 'languages', query.languages, 'language');
@@ -132,12 +148,16 @@ export class GroupsService {
         },
         include: {
           members: {
+            where: { status: 'ACCEPTED' },
             select: {
               role: true,
-              status: true,
-              user: { select: { pathPicture: true } },
+              user: {
+                select: {
+                  pathPicture: true,
+                },
+              },
             },
-            where: { status: 'ACCEPTED' },
+            take: 3, // Limiter à 3 membres dans Prisma
           },
         },
         skip,
@@ -151,6 +171,10 @@ export class GroupsService {
       }),
     ]);
 
+    // Calcul des métadonnées de pagination
+    const totalPages = Math.ceil(total / limit);
+    const hasNextPage = skip + limit < total;
+
     return {
       groups: groups.map((group) => ({
         id: group.id,
@@ -159,13 +183,15 @@ export class GroupsService {
         dateFrom: group.dateFrom,
         dateTo: group.dateTo,
         pathPicture: group.pathPicture,
-        members: group.members.slice(0, 3).map((member) => ({
+        members: group.members.map((member) => ({
           role: member.role,
-          status: member.status,
           pathPicture: member.user.pathPicture,
         })),
       })),
       total,
+      currentPage: page,
+      totalPages,
+      hasNextPage,
     };
   }
 
