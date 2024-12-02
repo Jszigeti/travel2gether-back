@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { UpdateMessageDto } from './dto/update-message.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -124,6 +124,44 @@ export class MessagesService {
         isSender: message.senderId === userId,
       },
     }));
+  }
+
+  async findUserChat(interlocutorId: number, userId: number) {
+    const userChat = await this.prismaService.message.findMany({
+      where: {
+        OR: [
+          { senderId: userId, userReceiverId: interlocutorId },
+          { senderId: interlocutorId, userReceiverId: userId },
+        ],
+      },
+      select: {
+        id: true,
+        senderId: true,
+        userReceiverId: true,
+        createdAt: true,
+        content: true,
+      },
+    });
+    if (!userChat) throw new NotFoundException();
+    const interlocutor = await this.prismaService.profile.findUnique({
+      where: {
+        userId: interlocutorId,
+      },
+      select: {
+        userId: true,
+        pathPicture: true,
+        firstname: true,
+        lastname: true,
+      },
+    });
+
+    return {
+      messages: userChat.map((message) => ({
+        ...message,
+        isSender: message.senderId === userId,
+      })),
+      interlocutor,
+    };
   }
 
   findOne(id: number) {

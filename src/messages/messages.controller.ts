@@ -14,7 +14,7 @@ import {
 import { MessagesService } from './messages.service';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { UpdateMessageDto } from './dto/update-message.dto';
-import { request, Request } from 'express';
+import { Request } from 'express';
 import { UsersService } from 'src/users/users.service';
 import { GroupsService } from 'src/groups/groups.service';
 
@@ -72,6 +72,16 @@ export class MessagesController {
     if (!group.members.some((member) => member.userId === req.user.sub))
       throw new UnauthorizedException('User not found in group');
     return this.messagesService.findGroupChat(groupId, req.user.sub);
+  }
+
+  @Get('/user/:interlocutor_id')
+  async findUserChat(
+    @Param('interlocutor_id', ParseIntPipe) interlocutorId: number,
+    @Req() req: Request,
+  ) {
+    if (!(await this.usersService.findProfile({ userId: interlocutorId })))
+      throw new NotFoundException('User not found');
+    return this.messagesService.findUserChat(interlocutorId, req.user.sub);
   }
 
   @Get(':id')
