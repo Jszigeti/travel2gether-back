@@ -5,5 +5,4 @@ export interface UserAvatar {
   firstname: string;
   lastname: string;
   pathPicture: string | null;
-  status: UserStatus;
 }

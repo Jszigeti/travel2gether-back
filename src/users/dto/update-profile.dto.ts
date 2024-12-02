@@ -64,11 +64,11 @@ export class UpdateProfileDto {
   lodgings?: Lodgings[];
 
   @IsOptional()
-  @IsDate()
+  @IsString()
   availableFrom?: string;
 
   @IsOptional()
-  @IsDate()
+  @IsString()
   availableTo?: string;
 
   @IsOptional()

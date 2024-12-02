@@ -44,8 +44,8 @@ model Profile {
   pathPicture           String?                   @map("path_picture") @db.VarChar(255)
   description           String?                   @db.VarChar(2000)
   budget                Budget?       
-  availableFrom         DateTime?                 @map("available_from")
-  availableTo           DateTime?                 @map("available_to")
+  availableFrom         String?                   @map("available_from")
+  availableTo           String?                   @map("available_to")
   createdAt             DateTime                  @map("created_at") @default(now())
   updatedAt             DateTime                  @map("updated_at") @updatedAt
   user                  User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -69,8 +69,8 @@ model Stage {
   id                    Int                       @id @default(autoincrement())
   title                 String                    @db.VarChar(100)
   description           String                    @db.VarChar(2000)
-  dateFrom              DateTime                  @map("date_from")
-  dateTo                DateTime                  @map("date_to")
+  dateFrom              String                    @map("date_from")
+  dateTo                String                    @map("date_to")
   pathPicture           String                    @map("path_picture") @db.VarChar(255)
   address               String                    @db.VarChar(255)
   longitude             Float       
@@ -87,9 +87,11 @@ model Group {
   title                 String                    @db.VarChar(100)
   description           String                    @db.VarChar(2000)
   location              String                    @db.VarChar(255)
-  dateFrom              DateTime                  @map("date_from")
-  dateTo                DateTime                  @map("date_to") 
-  pathPicture           String                    @map("path_picture") @db.VarChar(255)
+  dateFrom              String                    @map("date_from")
+  dateTo                String                    @map("date_to") 
+  pathPicture           String                    @map("path_picture") @db.VarChar(255)  
+  createdAt             DateTime                  @map("created_at") @default(now())
+  updatedAt             DateTime                  @map("updated_at")  @updatedAt
   status                GroupStatus               @default(PENDING)
   gender                GroupGender?              @default(MIXED)
   budget                Budget?       
@@ -152,8 +154,7 @@ model Rating {
 
 model Moderating {        
   moderaterId           Int                       @map("moderater_id")
-  moderatedId           Int                       @map("moderated_id")
-  value                 Int       
+  moderatedId           Int                       @map("moderated_id")    
   createdAt             DateTime                  @map("created_at") @default(now())
   moderater             Profile                   @relation("ModeraterUser", fields: [moderaterId], references: [userId], onDelete: Cascade)
   moderated             Profile                   @relation("ModeratedUser", fields: [moderatedId], references: [userId], onDelete: Cascade)

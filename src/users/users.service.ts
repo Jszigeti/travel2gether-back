@@ -66,11 +66,6 @@ export class UsersService {
           firstname: true,
           lastname: true,
           pathPicture: true,
-          user: {
-            select: {
-              status: true,
-            },
-          },
         },
       }),
       this.prismaService.profile.count({
@@ -88,7 +83,6 @@ export class UsersService {
       firstname: user.firstname,
       lastname: user.lastname,
       pathPicture: user.pathPicture,
-      status: user.user.status, // Accès au statut depuis la relation
     }));
 
     return {

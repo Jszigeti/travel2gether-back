@@ -1,6 +1,7 @@
 import { NotificationReferenceType, PrismaClient } from '@prisma/client';
 import { faker } from '@faker-js/faker';
 import * as bcrypt from 'bcrypt';
+import { first } from 'rxjs';
 
 const prisma = new PrismaClient();
 
@@ -45,8 +46,8 @@ async function main() {
                 'HIGH',
                 'LUXURY',
               ]),
-              availableFrom: faker.date.soon(),
-              availableTo: faker.date.future(),
+              availableFrom: faker.date.soon().toISOString().split('T')[0],
+              availableTo: faker.date.future().toISOString().split('T')[0],
               lodgings: {
                 createMany: {
                   data: faker.helpers
@@ -152,8 +153,8 @@ async function main() {
           title: faker.lorem.words(3),
           description: faker.lorem.paragraph(),
           location: faker.location.streetAddress(),
-          dateFrom: faker.date.soon(),
-          dateTo: faker.date.future(),
+          dateFrom: faker.date.soon().toISOString().split('T')[0],
+          dateTo: faker.date.future().toISOString().split('T')[0],
           pathPicture: faker.image.url(),
           status: faker.helpers.arrayElement([
             'PENDING',
@@ -229,6 +230,19 @@ async function main() {
                 .map((language) => ({ language })),
             },
           },
+          ageRanges: {
+            createMany: {
+              data: faker.helpers
+                .shuffle([
+                  'FIRST_AGE_RANGE',
+                  'SECOND_AGE_RANGE',
+                  'THIRD_AGE_RANGE',
+                  'FOURTH_AGE_RANGE',
+                ])
+                .slice(0, 2) // Picks 3 unique values
+                .map((ageRange) => ({ ageRange })),
+            },
+          },
           members: {
             create: (() => {
               const usedUserIds = new Set<number>(); // Keeping track of previously added users
@@ -276,8 +290,8 @@ async function main() {
             data: {
               title: faker.lorem.words(3),
               description: faker.lorem.paragraph(),
-              dateFrom: faker.date.soon(),
-              dateTo: faker.date.future(),
+              dateFrom: faker.date.soon().toISOString().split('T')[0],
+              dateTo: faker.date.future().toISOString().split('T')[0],
               address: faker.location.streetAddress(),
               longitude: faker.location.longitude(),
               latitude: faker.location.latitude(),

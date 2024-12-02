@@ -151,7 +151,6 @@ export class GroupsService {
             where: { status: 'ACCEPTED' },
             select: {
               role: true,
-              status: true,
               user: {
                 select: {
                   pathPicture: true,
@@ -186,7 +185,6 @@ export class GroupsService {
         pathPicture: group.pathPicture,
         members: group.members.map((member) => ({
           role: member.role,
-          status: member.status,
           pathPicture: member.user.pathPicture,
         })),
       })),

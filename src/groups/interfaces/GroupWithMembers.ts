@@ -11,8 +11,8 @@ export interface GroupWithMembers {
   title: string;
   description: string;
   location: string;
-  dateFrom: Date;
-  dateTo: Date;
+  dateFrom: string;
+  dateTo: string;
   pathPicture: string;
   status: GroupStatus;
   gender: GroupGender;
