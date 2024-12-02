@@ -12,6 +12,8 @@ import {
   UnauthorizedException,
   BadRequestException,
   Query,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
 import { GroupsService } from './groups.service';
 import { CreateGroupDto } from './dto/create-group.dto';
@@ -29,21 +31,38 @@ import { GroupWithMembersAndStages } from './interfaces/GroupWithMembersAndStage
 import { NotificationsService } from 'src/notifications/notifications.service';
 import { SearchGroupDto } from './dto/search-group.dto';
 import { Prisma } from '@prisma/client';
+import { fileValidationPipe } from 'src/medias/pipes/file-validation';
+import { MediasService } from 'src/medias/medias.service';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('groups')
 export class GroupsController {
   constructor(
     private readonly groupsService: GroupsService,
     private readonly notificationsService: NotificationsService,
+    private readonly mediasService: MediasService,
   ) {}
 
   // Group endpoints
+  @UseInterceptors(FileInterceptor('file'))
   @Post()
   async create(
     @Req() req: Request,
     @Body() body: CreateGroupDto,
+    @UploadedFile(fileValidationPipe) file: Express.Multer.File,
   ): Promise<Group> {
+    body.pathPicture = await this.mediasService.saveNewFileAndReturnPath(
+      file,
+      Date.now(),
+    );
     return this.groupsService.create(body, req.user.sub);
+  }
+
+  @UseInterceptors(FileInterceptor('file'))
+  @Public()
+  @Post('test')
+  async test(@UploadedFile(fileValidationPipe) file: Express.Multer.File) {
+    return await this.mediasService.saveNewFileAndReturnPath(file, Date.now());
   }
 
   @Public()
@@ -62,20 +81,30 @@ export class GroupsController {
     return group;
   }
 
+  @UseInterceptors(FileInterceptor('file'))
   @Patch(':groupId')
   async update(
     @Req() req: Request,
     @Param('groupId', ParseIntPipe) groupId: number,
-    @Body() updateGroupDto: UpdateGroupDto,
+    @Body() body: UpdateGroupDto,
+    @UploadedFile(fileValidationPipe) file?: Express.Multer.File,
   ): Promise<string> {
     // Check if group exists
     const group = await this.groupsService.findOne({ id: groupId });
     if (!group) throw new NotFoundException('Group not found');
     // Check if user is authorized
-    if (!this.groupsService.checkIfUserIsAuthorized(group, req.user.sub))
+    if (!this.groupsService.IsUserAuthorized(group, req.user.sub))
       throw new UnauthorizedException('You are not allowed');
-    // Update groupe dans return success message
-    await this.groupsService.update(groupId, updateGroupDto);
+    // If file is uploaded
+    if (file) {
+      body.pathPicture = await this.mediasService.replaceMediaFileAndReturnPath(
+        groupId,
+        file,
+        group.pathPicture,
+      );
+    }
+    // Update group
+    await this.groupsService.update(groupId, body);
     // Create notification for group members if members > 1
     await this.notificationsService.createToAllMembers(
       group,
@@ -96,7 +125,7 @@ export class GroupsController {
     const group = await this.groupsService.findOne({ id: groupId });
     if (!group) throw new NotFoundException('Group not found');
     // Check if user is author
-    if (!this.groupsService.checkIfUserIsAuthorized(group, req.user.sub, true))
+    if (!this.groupsService.IsUserAuthorized(group, req.user.sub, true))
       throw new UnauthorizedException('You are not allowed');
     // Delete group
     await this.groupsService.delete(groupId);
@@ -122,7 +151,7 @@ export class GroupsController {
     const group = await this.groupsService.findOne({ id: groupId });
     if (!group) throw new NotFoundException('Group not found');
     // Check if user is authorized
-    if (!this.groupsService.checkIfUserIsAuthorized(group, req.user.sub))
+    if (!this.groupsService.IsUserAuthorized(group, req.user.sub))
       throw new UnauthorizedException('You are not allowed');
     // Update groupe dans return success message
     await this.groupsService.inviteMember(groupId, userId);
@@ -146,7 +175,7 @@ export class GroupsController {
     const group = await this.groupsService.findOne({ id: groupId });
     if (!group) throw new NotFoundException('Group not found');
     // Check if user is authorized
-    if (!this.groupsService.checkIfUserIsAuthorized(group, req.user.sub))
+    if (!this.groupsService.IsUserAuthorized(group, req.user.sub))
       throw new UnauthorizedException('You are not allowed');
     // Return members
     return this.groupsService.getMembers(groupId);
@@ -162,7 +191,7 @@ export class GroupsController {
     const group = await this.groupsService.findOne({ id: groupId });
     if (!group) throw new NotFoundException('Group not found');
     // Check if user is authorized
-    if (!this.groupsService.checkIfUserIsAuthorized(group, req.user.sub))
+    if (!this.groupsService.IsUserAuthorized(group, req.user.sub))
       throw new UnauthorizedException('You are not allowed');
     // Check if member exists in group
     if (group.members.some((member) => member.userId !== userId))
@@ -194,7 +223,7 @@ export class GroupsController {
     const group = await this.groupsService.findOne({ id: groupId });
     if (!group) throw new NotFoundException('Group not found');
     // Check if user is authorized
-    if (!this.groupsService.checkIfUserIsAuthorized(group, req.user.sub))
+    if (!this.groupsService.IsUserAuthorized(group, req.user.sub))
       throw new UnauthorizedException('You are not allowed');
     // Check if member exists in group
     if (group.members.some((member) => member.userId !== userId))
@@ -231,7 +260,7 @@ export class GroupsController {
     const group = await this.groupsService.findOne({ id: groupId });
     if (!group) throw new NotFoundException('Group not found');
     // Check if user is authorized
-    if (!this.groupsService.checkIfUserIsAuthorized(group, req.user.sub))
+    if (!this.groupsService.IsUserAuthorized(group, req.user.sub))
       throw new UnauthorizedException('You are not allowed');
     // Check if member exists in group
     if (group.members.some((member) => member.userId !== userId))

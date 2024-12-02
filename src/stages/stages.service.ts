@@ -1,26 +1,38 @@
 import { Injectable } from '@nestjs/common';
 import { CreateStageDto } from './dto/create-stage.dto';
 import { UpdateStageDto } from './dto/update-stage.dto';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { Stage } from '@prisma/client';
 
 @Injectable()
 export class StagesService {
-  create(createStageDto: CreateStageDto) {
-    return 'This action adds a new stage';
+  constructor(private readonly prismaService: PrismaService) {}
+
+  async create(body: CreateStageDto, groupId: number): Promise<Stage> {
+    return this.prismaService.stage.create({
+      data: { ...body, groupId },
+    });
   }
 
-  findAll() {
-    return `This action returns all stages`;
+  async findAll(groupId: number): Promise<Partial<Stage>[]> {
+    return this.prismaService.stage.findMany({
+      where: { groupId },
+      select: { id: true, title: true, dateFrom: true, dateTo: true },
+    });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} stage`;
+  async findOne(id: number): Promise<Stage> {
+    return this.prismaService.stage.findUnique({ where: { id } });
   }
 
-  update(id: number, updateStageDto: UpdateStageDto) {
-    return `This action updates a #${id} stage`;
+  async update(id: number, body: UpdateStageDto): Promise<Stage> {
+    return this.prismaService.stage.update({
+      where: { id },
+      data: body,
+    });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} stage`;
+  async delete(id: number): Promise<Stage> {
+    return this.prismaService.stage.delete({ where: { id } });
   }
 }

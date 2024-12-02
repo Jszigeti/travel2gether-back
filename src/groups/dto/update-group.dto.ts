@@ -34,11 +34,11 @@ export class UpdateGroupDto {
   pathPicture?: string;
 
   @IsOptional()
-  @IsDateString()
+  @IsString()
   dateFrom?: string;
 
   @IsOptional()
-  @IsDateString()
+  @IsString()
   dateTo?: string;
 
   @IsOptional()

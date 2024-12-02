@@ -30,7 +30,6 @@ export class UpdateProfileDto {
 
   @IsOptional()
   @IsString()
-  @IsUrl()
   pathPicture?: string;
 
   @IsOptional()

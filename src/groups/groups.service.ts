@@ -1,4 +1,8 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { UpdateGroupDto } from './dto/update-group.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -9,6 +13,7 @@ import {
   GroupRole,
   GroupUser,
   GroupUserStatus,
+  Media,
   Prisma,
 } from '@prisma/client';
 import { GroupWithMembers } from './interfaces/GroupWithMembers';
@@ -289,15 +294,34 @@ export class GroupsService {
   }
 
   // Utils functions
-  async checkIfUserIsAuthorized(
+  IsUserAuthorized(
     group: GroupWithMembers,
     userId: number,
     checkAuthor: boolean = false,
-  ): Promise<boolean> {
+  ): boolean {
     return group.members.some((member) => {
       if (!(member.userId === userId)) return false;
       if (checkAuthor) return member.role === 'AUTHOR';
       return member.role !== 'TRAVELER' && member.status !== 'DENIED';
     });
+  }
+
+  isUserInGroup(group: GroupWithMembers, userId: number): boolean {
+    return group.members.some((member) => {
+      return member.userId === userId && member.status !== 'DENIED';
+    });
+  }
+
+  canDeleteMedia(
+    group: GroupWithMembers,
+    media: Media,
+    userId: number,
+  ): boolean {
+    return (
+      media.userId === userId ||
+      group.members.some(
+        (member) => member.role === 'AUTHOR' || member.role === 'ORGANIZER',
+      )
+    );
   }
 }

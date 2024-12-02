@@ -10,6 +10,8 @@ import {
   Query,
   Req,
   UnauthorizedException,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { Public } from 'src/auth/decorators/public.decorator';
@@ -18,11 +20,16 @@ import { Request } from 'express';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import * as bcrypt from 'bcrypt';
-import { SearchUserDto } from './dto/search-user.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { MediasService } from 'src/medias/medias.service';
+import { fileValidationPipe } from 'src/medias/pipes/file-validation';
 
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly mediasService: MediasService,
+  ) {}
 
   // Search users
   @Public()
@@ -80,14 +87,26 @@ export class UsersController {
     return profile;
   }
 
+  @UseInterceptors(FileInterceptor('file'))
   @Patch('/profile')
   async update(
     @Req() req: Request,
     @Body() body: UpdateProfileDto,
+    @UploadedFile(fileValidationPipe) file?: Express.Multer.File,
   ): Promise<string> {
     // Check if user exists
-    if (!(await this.usersService.findProfile({ userId: req.user.sub })))
-      throw new NotFoundException('User not found');
+    const profile = await this.usersService.findProfile({
+      userId: req.user.sub,
+    });
+    if (!profile) throw new NotFoundException('User not found');
+    // If file is uploaded
+    if (file) {
+      body.pathPicture = await this.mediasService.replaceMediaFileAndReturnPath(
+        req.user.sub,
+        file,
+        profile.pathPicture,
+      );
+    }
     // Update profile and return success message
     return this.usersService.updateProfile(req.user.sub, body);
   }

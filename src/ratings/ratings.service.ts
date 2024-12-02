@@ -1,26 +1,25 @@
 import { Injectable } from '@nestjs/common';
 import { CreateRatingDto } from './dto/create-rating.dto';
-import { UpdateRatingDto } from './dto/update-rating.dto';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { Rating } from '@prisma/client';
 
 @Injectable()
 export class RatingsService {
-  create(createRatingDto: CreateRatingDto) {
-    return 'This action adds a new rating';
+  constructor(private readonly prismaService: PrismaService) {}
+
+  async create(
+    value: number,
+    raterId: number,
+    ratedId: number,
+  ): Promise<Rating> {
+    return this.prismaService.rating.create({
+      data: { value, raterId, ratedId },
+    });
   }
 
-  findAll() {
-    return `This action returns all ratings`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} rating`;
-  }
-
-  update(id: number, updateRatingDto: UpdateRatingDto) {
-    return `This action updates a #${id} rating`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} rating`;
+  async findOne(raterId: number, ratedId: number) {
+    return this.prismaService.rating.findUnique({
+      where: { raterId_ratedId: { ratedId, raterId } },
+    });
   }
 }
