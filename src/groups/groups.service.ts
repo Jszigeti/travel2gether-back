@@ -268,11 +268,11 @@ export class GroupsService {
   }
 
   // Utils functions
-  async IsUserAuthorized(
+  IsUserAuthorized(
     group: GroupWithMembers,
     userId: number,
     checkAuthor: boolean = false,
-  ): Promise<boolean> {
+  ): boolean {
     return group.members.some((member) => {
       if (!(member.userId === userId)) return false;
       if (checkAuthor) return member.role === 'AUTHOR';
@@ -280,24 +280,22 @@ export class GroupsService {
     });
   }
 
-  async isUserInGroup(groupId: number, userId: number): Promise<void> {
-    const group = await this.findOne({ id: groupId });
-    if (!group) throw new NotFoundException('Group not found');
-    if (!group.members.some((member) => member.userId === userId))
-      throw new UnauthorizedException("User isn't in group");
+  isUserInGroup(group: GroupWithMembers, userId: number): boolean {
+    return group.members.some((member) => {
+      return member.userId === userId && member.status !== 'DENIED';
+    });
   }
 
-  async canDeleteMedia(media: Media, userId: number): Promise<void> {
-    const group = await this.findOne({ id: media.groupId });
-    if (!group) throw new NotFoundException('Group not found');
-    if (
-      !(
-        media.userId === userId ||
-        group.members.some(
-          (member) => member.role === 'AUTHOR' || member.role === 'ORGANIZER',
-        )
+  canDeleteMedia(
+    group: GroupWithMembers,
+    media: Media,
+    userId: number,
+  ): boolean {
+    return (
+      media.userId === userId ||
+      group.members.some(
+        (member) => member.role === 'AUTHOR' || member.role === 'ORGANIZER',
       )
-    )
-      throw new UnauthorizedException("User can't delete media");
+    );
   }
 }

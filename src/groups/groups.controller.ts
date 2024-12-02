@@ -81,12 +81,13 @@ export class GroupsController {
     return group;
   }
 
+  @UseInterceptors(FileInterceptor('file'))
   @Patch(':groupId')
   async update(
     @Req() req: Request,
     @Param('groupId', ParseIntPipe) groupId: number,
     @Body() body: UpdateGroupDto,
-    @UploadedFile(fileValidationPipe) file: Express.Multer.File,
+    @UploadedFile(fileValidationPipe) file?: Express.Multer.File,
   ): Promise<string> {
     // Check if group exists
     const group = await this.groupsService.findOne({ id: groupId });
@@ -102,7 +103,7 @@ export class GroupsController {
         group.pathPicture,
       );
     }
-    // Update groupe dans return success message
+    // Update group
     await this.groupsService.update(groupId, body);
     // Create notification for group members if members > 1
     await this.notificationsService.createToAllMembers(

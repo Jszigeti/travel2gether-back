@@ -1,26 +1,24 @@
 import {
   Controller,
-  Get,
   Post,
+  UseInterceptors,
+  UploadedFile,
   Body,
   Param,
-  Delete,
-  UploadedFile,
-  UseInterceptors,
   ParseIntPipe,
   Req,
   BadRequestException,
-  ParseFilePipe,
-  MaxFileSizeValidator,
-  FileTypeValidator,
   NotFoundException,
+  UnauthorizedException,
+  Get,
+  Delete,
 } from '@nestjs/common';
-import { MediasService } from './medias.service';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { Request } from 'express';
 import { Media } from '@prisma/client';
 import { GroupsService } from 'src/groups/groups.service';
+import { MediasService } from './medias.service';
 import { fileValidationPipe } from './pipes/file-validation';
+import { Request } from 'express';
 
 @Controller()
 export class MediasController {
@@ -41,8 +39,12 @@ export class MediasController {
     if (!file) {
       throw new BadRequestException('No file uploaded');
     }
-    // Check if group exists and if user is in it
-    await this.groupsService.isUserInGroup(groupId, req.user.sub);
+    // Check if group exists
+    const group = await this.groupsService.findOne({ id: groupId });
+    if (!group) throw new NotFoundException('Group not found');
+    // Check if user is in group
+    if (!this.groupsService.isUserInGroup(group, req.user.sub))
+      throw new UnauthorizedException('You are not allowed');
     // Create the media path and save the media on server
     const path = await this.mediasService.saveNewFileAndReturnPath(
       file,
@@ -57,8 +59,12 @@ export class MediasController {
     @Param('groupId', ParseIntPipe) groupId: number,
     @Req() req: Request,
   ): Promise<Media[]> {
-    // Check if group exists and if user is in it
-    await this.groupsService.isUserInGroup(groupId, req.user.sub);
+    // Check if group exists
+    const group = await this.groupsService.findOne({ id: groupId });
+    if (!group) throw new NotFoundException('Group not found');
+    // Check if user is in group
+    if (!this.groupsService.isUserInGroup(group, req.user.sub))
+      throw new UnauthorizedException('You are not allowed');
     // Return medias
     return this.mediasService.findAll(groupId);
   }
@@ -71,8 +77,12 @@ export class MediasController {
     // Check if media exists
     const media = await this.mediasService.findOne({ id });
     if (!media) throw new NotFoundException('Media not found');
-    // Check if group exists and if user is authorized to delete media
-    await this.groupsService.canDeleteMedia(media, req.user.sub);
+    // Check if group exists
+    const group = await this.groupsService.findOne({ id: media.groupId });
+    if (!group) throw new NotFoundException('Group not found');
+    // Check if user is in group
+    if (!this.groupsService.canDeleteMedia(group, media, req.user.sub))
+      throw new UnauthorizedException('You are not allowed');
     // Delete the physique media
     await this.mediasService.deleteFile(media.path);
     // Delete the media from DB
