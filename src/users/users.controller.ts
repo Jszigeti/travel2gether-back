@@ -23,6 +23,7 @@ import * as bcrypt from 'bcrypt';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { MediasService } from 'src/medias/medias.service';
 import { fileValidationPipe } from 'src/medias/pipes/file-validation';
+import { SearchUserDto } from './dto/search-user.dto';
 
 @Controller('users')
 export class UsersController {

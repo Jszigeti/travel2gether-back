@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -98,10 +99,7 @@ export class GroupsService {
       query.dateTo &&
       new Date(query.dateTo) <= new Date(query.dateFrom)
     ) {
-      throw new HttpException(
-        'dateTo must be later than dateFrom',
-        HttpStatus.BAD_REQUEST,
-      );
+      throw new BadRequestException('dateTo must be later than dateFrom');
     }
 
     // Critère pour location (recherche partielle)
