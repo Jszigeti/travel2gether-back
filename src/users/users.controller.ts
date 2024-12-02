@@ -7,6 +7,7 @@ import {
   Param,
   ParseIntPipe,
   Patch,
+  Query,
   Req,
   UnauthorizedException,
   UploadedFile,
@@ -29,6 +30,13 @@ export class UsersController {
     private readonly usersService: UsersService,
     private readonly mediasService: MediasService,
   ) {}
+
+  // Search users
+  @Public()
+  @Get('search')
+  async search(@Query() query: SearchUserDto) {
+    return this.usersService.search(query);
+  }
 
   // User endpoints
   @Patch()

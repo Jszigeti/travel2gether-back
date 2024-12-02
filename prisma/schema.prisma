@@ -89,7 +89,9 @@ model Group {
   location              String                    @db.VarChar(255)
   dateFrom              String                    @map("date_from")
   dateTo                String                    @map("date_to") 
-  pathPicture           String                    @map("path_picture") @db.VarChar(255)
+  pathPicture           String                    @map("path_picture") @db.VarChar(255)  
+  createdAt             DateTime                  @map("created_at") @default(now())
+  updatedAt             DateTime                  @map("updated_at")  @updatedAt
   status                GroupStatus               @default(PENDING)
   gender                GroupGender?              @default(MIXED)
   budget                Budget?       

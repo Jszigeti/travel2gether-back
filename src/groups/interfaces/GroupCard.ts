@@ -9,7 +9,6 @@ export interface GroupCard {
   pathPicture: string;
   members: {
     role: GroupRole;
-    status: GroupUserStatus;
     pathPicture: string;
   }[];
 }

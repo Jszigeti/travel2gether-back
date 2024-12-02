@@ -12,6 +12,7 @@ import { MessagesModule } from './messages/messages.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ConfigModule } from '@nestjs/config';
 import { EmailModule } from './email/email.module';
+import { MatchingModule } from './matching/matching.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { EmailModule } from './email/email.module';
     MessagesModule,
     PrismaModule,
     EmailModule,
+    MatchingModule,
   ],
 })
 export class AppModule {}
