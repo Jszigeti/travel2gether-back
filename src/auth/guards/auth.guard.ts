@@ -16,15 +16,22 @@ export class AuthGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    // Public decorator logic
     const isPublic = this.reflector.getAllAndOverride<boolean>(
       process.env.IS_PUBLIC_KEY,
       [context.getHandler(), context.getClass()],
     );
     if (isPublic) return true;
+    // Token decorator logic
+    const tokenType =
+      this.reflector.get<string>('tokenType', context.getHandler()) ||
+      'accessToken';
+    // Extract token from request
     const request = context.switchToHttp().getRequest();
-    const token = this.extractTokenFromHeader(request);
+    const token: string = request.cookies?.tokenType;
+    // If no token throw 401
     if (!token) throw new UnauthorizedException();
-
+    // If token try to verify and store it in request
     try {
       const payload = await this.jwtService.verifyAsync(token, {
         secret: process.env.SECRET_KEY,
@@ -37,10 +44,5 @@ export class AuthGuard implements CanActivate {
       throw new UnauthorizedException();
     }
     return true;
-  }
-
-  private extractTokenFromHeader(request: Request): string | undefined {
-    const [type, token] = request.headers.authorization?.split(' ') ?? [];
-    return type === 'Bearer' ? token : undefined;
   }
 }

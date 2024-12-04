@@ -7,7 +7,7 @@ import {
   ProfileGender,
   UserStatus,
 } from '@prisma/client';
-import { UserWithName } from './interfaces/UserWithName';
+import { UserWithNameAndAvatar } from './interfaces/UserWithNameAndAvatar';
 import { ProfileDetails } from './interfaces/ProfileDetails';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -97,10 +97,18 @@ export class UsersService {
   // User functions
   async findOne(
     userWhereUniqueInput: Prisma.UserWhereUniqueInput,
-  ): Promise<UserWithName> {
+  ): Promise<UserWithNameAndAvatar> {
     const user = await this.prismaService.user.findUnique({
       where: userWhereUniqueInput,
-      include: { profile: { select: { firstname: true, lastname: true } } },
+      include: {
+        profile: {
+          select: {
+            firstname: true,
+            lastname: true,
+            pathPicture: true,
+          },
+        },
+      },
     });
     if (!user) return null;
     return {
@@ -110,6 +118,7 @@ export class UsersService {
       status: user.status,
       firstname: user.profile.firstname,
       lastname: user.profile.lastname,
+      pathPicture: user.profile.pathPicture,
     };
   }
 

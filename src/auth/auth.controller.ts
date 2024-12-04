@@ -9,8 +9,9 @@ import {
   Patch,
   ParseIntPipe,
   Get,
+  Res,
 } from '@nestjs/common';
-import { Request } from 'express';
+import { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { UsersService } from 'src/users/users.service';
 import { JwtService } from '@nestjs/jwt';
@@ -20,8 +21,9 @@ import { Public } from './decorators/public.decorator';
 import { SigninDto } from './dtos/signin.dto';
 import { SignupDto } from './dtos/signup.dto';
 import { TokenType, User, UserStatus } from '@prisma/client';
-import { UserIdWithTokens } from './interfaces/UserIdWithTokens';
+import { UserIdWithAvatar } from './interfaces/UserIdWithAvatar';
 import { EmailService } from 'src/email/email.service';
+import { UseRefreshToken } from './decorators/useRefreshToken.decorator';
 
 @Controller()
 export class AuthController {
@@ -60,7 +62,10 @@ export class AuthController {
 
   @Public()
   @Post('signin')
-  async signin(@Body() body: SigninDto): Promise<UserIdWithTokens> {
+  async signin(
+    @Body() body: SigninDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<UserIdWithAvatar> {
     // Check if user exists
     const user = await this.usersService.findOne({ email: body.email });
     if (!user) throw new UnauthorizedException('Bad credentials');
@@ -69,7 +74,11 @@ export class AuthController {
       throw new UnauthorizedException('Bad credentials');
     // Check user status
     await this.authService.checkUserStatus(user.status, user.id);
-    // Generate refresh token
+    // Generate tokens
+    const accessToken = await this.jwtService.signAsync(
+      { sub: user.id },
+      { expiresIn: '5m' },
+    );
     const refreshToken = await this.jwtService.signAsync(
       { sub: user.id },
       { expiresIn: '15m' },
@@ -80,19 +89,21 @@ export class AuthController {
       user.id,
       TokenType.REFRESH,
     );
-    // Return tokens
+    // Create cookies and send it
+    await this.authService.sendCookie(res, 'accessToken', accessToken);
+    await this.authService.sendCookie(res, 'refreshToken', refreshToken);
+    // Return user infos
     return {
-      user: { id: user.id },
-      access_token: await this.jwtService.signAsync(
-        { sub: user.id },
-        { expiresIn: '5m' },
-      ),
-      refresh_token: refreshToken,
+      user: { id: user.id, pathPicture: user.pathPicture },
     };
   }
 
+  @UseRefreshToken()
   @Post('refresh')
-  async refreshToken(@Req() req: Request): Promise<UserIdWithTokens> {
+  async refreshToken(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<string> {
     // Retrieve refresh token from DB
     const savedToken = await this.authService.findToken(
       req.user.sub,
@@ -103,7 +114,11 @@ export class AuthController {
     // Compare tokens
     if (!bcrypt.compare(savedToken.token, req.token))
       throw new UnauthorizedException();
-    // Generate refresh token
+    // Generate tokens
+    const accessToken = await this.jwtService.signAsync(
+      { sub: req.user.sub },
+      { expiresIn: '5m' },
+    );
     const refreshToken = await this.jwtService.signAsync(
       { sub: req.user.sub },
       { expiresIn: '15m' },
@@ -114,15 +129,10 @@ export class AuthController {
       req.user.sub,
       TokenType.REFRESH,
     );
+    await this.authService.sendCookie(res, 'accessToken', accessToken);
+    await this.authService.sendCookie(res, 'refreshToken', refreshToken);
     // Return tokens
-    return {
-      user: { id: req.user.sub },
-      access_token: await this.jwtService.signAsync(
-        { sub: req.user.sub },
-        { expiresIn: '5m' },
-      ),
-      refresh_token: refreshToken,
-    };
+    return 'Tokens successfully refresh';
   }
 
   @Public()
