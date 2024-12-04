@@ -28,7 +28,7 @@ export class AuthGuard implements CanActivate {
       'accessToken';
     // Extract token from request
     const request = context.switchToHttp().getRequest();
-    const token: string = request.cookies?.tokenType;
+    const token: string = request.cookies[tokenType];
     // If no token throw 401
     if (!token) throw new UnauthorizedException();
     // If token try to verify and store it in request

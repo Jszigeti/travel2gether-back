@@ -36,7 +36,10 @@ export class AuthController {
 
   @Public()
   @Post('signup')
-  async signup(@Body() body: SignupDto): Promise<User> {
+  async signup(
+    @Body() body: SignupDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<User> {
     // Body destructuring
     const { email, password } = body;
     // Check if email already exists
@@ -56,6 +59,13 @@ export class AuthController {
     );
     // Send confirmation mail
     await this.emailService.sendMail(email, verificationToken, user.id);
+    // Generate access token
+    const accessToken = await this.jwtService.signAsync(
+      { sub: user.id },
+      { expiresIn: '5m' },
+    );
+    // Create cookie and send it
+    await this.authService.sendCookie(res, 'accessToken', accessToken);
     // Return user
     return user;
   }
