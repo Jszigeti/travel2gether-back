@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Token, TokenType, User, UserStatus } from '@prisma/client';
 import { v4 as uuidv4 } from 'uuid';
@@ -32,9 +32,11 @@ export class AuthService {
     });
   }
 
-  async checkUserStatus(userStatus: UserStatus, userId: number): Promise<void> {
-    if (userStatus === UserStatus.BANNED)
-      throw new UnauthorizedException('User banned');
+  async checkUserStatus(
+    userStatus: UserStatus,
+    userId: number,
+  ): Promise<string> {
+    if (userStatus === UserStatus.BANNED) return 'BANNED';
     if (userStatus === UserStatus.NOT_VERIFIED) {
       // Generate verification token and save it in DB
       const verificationToken = uuidv4();
@@ -45,9 +47,7 @@ export class AuthService {
       );
       // Send mail with verification token and userId
       // ...
-      throw new UnauthorizedException(
-        'User not verified, please check your mails',
-      );
+      return 'NOT_VERIFIED';
     }
   }
 
@@ -129,10 +129,10 @@ export class AuthService {
     }
   }
 
-  async checkIfTokenExpired(
+  async isTokenExpired(
     savedToken: TokenWithUserEmail,
     type: TokenType,
-  ): Promise<void> {
+  ): Promise<boolean> {
     if (new Date() > savedToken.expiredAt) {
       const token = uuidv4();
       await this.hashAndSaveToken(token, savedToken.userId, type);
@@ -143,8 +143,9 @@ export class AuthService {
         savedToken.userId,
         type === TokenType.RESET_PASSWORD && false,
       );
-      throw new UnauthorizedException();
+      return true;
     }
+    return false;
   }
 
   async sendCookie(

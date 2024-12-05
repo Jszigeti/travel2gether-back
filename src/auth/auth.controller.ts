@@ -82,7 +82,13 @@ export class AuthController {
     if (!(await bcrypt.compare(body.password, user.password)))
       throw new ForbiddenException('Bad credentials');
     // Check user status
-    await this.authService.checkUserStatus(user.status, user.id);
+    const userStatus = await this.authService.checkUserStatus(
+      user.status,
+      user.id,
+    );
+    if (userStatus === 'BANNED') throw new ForbiddenException('User banned');
+    if (userStatus === 'NOT_VERIFIED')
+      throw new ForbiddenException('User not verified');
     // Generate tokens
     const accessToken = await this.jwtService.signAsync(
       { sub: user.id },
@@ -155,16 +161,29 @@ export class AuthController {
       userId,
       TokenType.VERIFICATION,
     );
-    // Throw error if no verification token in DB
-    if (!savedToken) throw new ForbiddenException();
-    // Throw error and generate new verification token if expired
-    await this.authService.checkIfTokenExpired(
-      savedToken,
-      TokenType.VERIFICATION,
-    );
-    // Compare tokens
-    if (!(await bcrypt.compare(verificationToken, savedToken.token)))
+    // Throw error and generate new verification token if no verification token in DB
+    if (!savedToken) {
+      await this.authService.hashAndSaveToken(
+        verificationToken,
+        userId,
+        TokenType.VERIFICATION,
+      );
       throw new ForbiddenException();
+    }
+    // Throw error and generate new verification token if expired
+    if (
+      await this.authService.isTokenExpired(savedToken, TokenType.VERIFICATION)
+    )
+      throw new ForbiddenException();
+    // Compare tokens and generate new verification token if error
+    if (!(await bcrypt.compare(verificationToken, savedToken.token))) {
+      await this.authService.hashAndSaveToken(
+        verificationToken,
+        userId,
+        TokenType.VERIFICATION,
+      );
+      throw new ForbiddenException();
+    }
     // Edit user status
     await this.usersService.updateStatus(userId, UserStatus.VERIFIED);
     await this.authService.deleteToken(userId, TokenType.VERIFICATION);
@@ -210,16 +229,32 @@ export class AuthController {
       userId,
       TokenType.RESET_PASSWORD,
     );
-    // Throw error if no reset token in DB
-    if (!savedToken) throw new ForbiddenException();
-    // Throw error and generate new password reset token if expired
-    await this.authService.checkIfTokenExpired(
-      savedToken,
-      TokenType.RESET_PASSWORD,
-    );
-    // Compare tokens
-    if (!(await bcrypt.compare(passwordResetToken, savedToken.token)))
+    // Throw error and generate new password reset token if no reset token in DB
+    if (!savedToken) {
+      await this.authService.hashAndSaveToken(
+        passwordResetToken,
+        userId,
+        TokenType.RESET_PASSWORD,
+      );
       throw new ForbiddenException();
+    }
+    // Throw error and generate new password reset token if expired
+    if (
+      await this.authService.isTokenExpired(
+        savedToken,
+        TokenType.RESET_PASSWORD,
+      )
+    )
+      throw new ForbiddenException();
+    // Compare tokens and generate new password reset token if error
+    if (!(await bcrypt.compare(passwordResetToken, savedToken.token))) {
+      await this.authService.hashAndSaveToken(
+        passwordResetToken,
+        userId,
+        TokenType.RESET_PASSWORD,
+      );
+      throw new ForbiddenException();
+    }
     // Edit user password
     await this.usersService.resetPassword(
       userId,
