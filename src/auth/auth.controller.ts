@@ -3,13 +3,12 @@ import {
   Post,
   Body,
   Param,
-  ConflictException,
-  UnauthorizedException,
   Req,
   Patch,
   ParseIntPipe,
   Get,
   Res,
+  ForbiddenException,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { AuthService } from './auth.service';
@@ -44,7 +43,7 @@ export class AuthController {
     const { email, password } = body;
     // Check if email already exists
     if (await this.usersService.findOne({ email }))
-      throw new ConflictException('Email already exists');
+      throw new ForbiddenException('Email already exists');
     // Hash password and create user with profile
     const user = await this.authService.createUserWithProfile({
       ...body,
@@ -78,10 +77,10 @@ export class AuthController {
   ): Promise<UserIdWithAvatar> {
     // Check if user exists
     const user = await this.usersService.findOne({ email: body.email });
-    if (!user) throw new UnauthorizedException('Bad credentials');
+    if (!user) throw new ForbiddenException('Bad credentials');
     // Compare passwords
     if (!(await bcrypt.compare(body.password, user.password)))
-      throw new UnauthorizedException('Bad credentials');
+      throw new ForbiddenException('Bad credentials');
     // Check user status
     await this.authService.checkUserStatus(user.status, user.id);
     // Generate tokens
@@ -120,10 +119,10 @@ export class AuthController {
       TokenType.REFRESH,
     );
     // Throw error if no refresh token in DB
-    if (!savedToken) throw new UnauthorizedException();
+    if (!savedToken) throw new ForbiddenException();
     // Compare tokens
     if (!bcrypt.compare(savedToken.token, req.token))
-      throw new UnauthorizedException();
+      throw new ForbiddenException();
     // Generate tokens
     const accessToken = await this.jwtService.signAsync(
       { sub: req.user.sub },
@@ -157,7 +156,7 @@ export class AuthController {
       TokenType.VERIFICATION,
     );
     // Throw error if no verification token in DB
-    if (!savedToken) throw new UnauthorizedException();
+    if (!savedToken) throw new ForbiddenException();
     // Throw error and generate new verification token if expired
     await this.authService.checkIfTokenExpired(
       savedToken,
@@ -165,7 +164,7 @@ export class AuthController {
     );
     // Compare tokens
     if (!(await bcrypt.compare(verificationToken, savedToken.token)))
-      throw new UnauthorizedException();
+      throw new ForbiddenException();
     // Edit user status
     await this.usersService.updateStatus(userId, UserStatus.VERIFIED);
     await this.authService.deleteToken(userId, TokenType.VERIFICATION);
@@ -212,7 +211,7 @@ export class AuthController {
       TokenType.RESET_PASSWORD,
     );
     // Throw error if no reset token in DB
-    if (!savedToken) throw new UnauthorizedException();
+    if (!savedToken) throw new ForbiddenException();
     // Throw error and generate new password reset token if expired
     await this.authService.checkIfTokenExpired(
       savedToken,
@@ -220,7 +219,7 @@ export class AuthController {
     );
     // Compare tokens
     if (!(await bcrypt.compare(passwordResetToken, savedToken.token)))
-      throw new UnauthorizedException();
+      throw new ForbiddenException();
     // Edit user password
     await this.usersService.resetPassword(
       userId,

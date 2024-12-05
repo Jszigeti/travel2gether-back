@@ -7,11 +7,10 @@ import {
   Req,
   ParseIntPipe,
   NotFoundException,
-  UnauthorizedException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { MessagesService } from './messages.service';
 import { CreateMessageDto } from './dto/create-message.dto';
-import { UpdateMessageDto } from './dto/update-message.dto';
 import { Request } from 'express';
 import { UsersService } from 'src/users/users.service';
 import { GroupsService } from 'src/groups/groups.service';
@@ -68,7 +67,7 @@ export class MessagesController {
     const group = await this.groupsService.findOne({ id: groupId });
     if (!group) throw new NotFoundException('Group not found');
     if (!group.members.some((member) => member.userId === req.user.sub))
-      throw new UnauthorizedException('User not found in group');
+      throw new ForbiddenException('User not found in group');
     return this.messagesService.findGroupChat(groupId, req.user.sub);
   }
 

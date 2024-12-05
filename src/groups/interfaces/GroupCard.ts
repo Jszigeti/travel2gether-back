@@ -1,4 +1,4 @@
-import { GroupRole, GroupUserStatus } from '@prisma/client';
+import { GroupRole } from '@prisma/client';
 
 export interface GroupCard {
   id: number;

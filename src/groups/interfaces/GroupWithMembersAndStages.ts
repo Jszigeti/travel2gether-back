@@ -1,11 +1,4 @@
-import {
-  Budget,
-  GroupGender,
-  GroupRole,
-  GroupStatus,
-  GroupUserStatus,
-} from '@prisma/client';
-import { GroupWithMembers } from './GroupWithMembers';
+import { Budget, GroupGender, GroupStatus } from '@prisma/client';
 
 export interface GroupWithMembersAndStages {
   group: {

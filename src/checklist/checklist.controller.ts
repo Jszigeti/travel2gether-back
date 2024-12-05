@@ -3,13 +3,12 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
   Delete,
   ParseIntPipe,
   Req,
   NotFoundException,
-  UnauthorizedException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { ChecklistService } from './checklist.service';
 import { CreateChecklistDto } from './dto/create-checklist.dto';
@@ -37,7 +36,7 @@ export class ChecklistController {
     if (!group) throw new NotFoundException('Group not found');
     // Check if user is authorized
     if (!this.groupsService.IsUserAuthorized(group, req.user.sub))
-      throw new UnauthorizedException('You are not allowed');
+      throw new ForbiddenException('You are not allowed');
     // Record item
     await this.checklistService.create(body, groupId);
     // Return success message
@@ -56,7 +55,7 @@ export class ChecklistController {
     if (!group) throw new NotFoundException('Group not found');
     // Check if user is authorized
     if (!this.groupsService.IsUserAuthorized(group, req.user.sub))
-      throw new UnauthorizedException('You are not allowed');
+      throw new ForbiddenException('You are not allowed');
     // Check if stage exists
     if (!(await this.stagesService.findOne(stageId)))
       throw new NotFoundException('Stage not found');
@@ -76,7 +75,7 @@ export class ChecklistController {
     if (!group) throw new NotFoundException('Group not found');
     // Check if user is in group
     if (!this.groupsService.isUserInGroup(group, req.user.sub))
-      throw new UnauthorizedException('You are not allowed');
+      throw new ForbiddenException('You are not allowed');
     // Return items
     return this.checklistService.findAllGroupItems(groupId);
   }
@@ -92,7 +91,7 @@ export class ChecklistController {
     if (!group) throw new NotFoundException('Group not found');
     // Check if user is in group
     if (!this.groupsService.isUserInGroup(group, req.user.sub))
-      throw new UnauthorizedException('You are not allowed');
+      throw new ForbiddenException('You are not allowed');
     // Check if stage exist
     if (!(await this.stagesService.findOne(stageId)))
       throw new NotFoundException('Stage not found');
@@ -113,7 +112,7 @@ export class ChecklistController {
     if (!group) throw new NotFoundException('Group not found');
     // Check if user is authorized
     if (!this.groupsService.IsUserAuthorized(group, req.user.sub))
-      throw new UnauthorizedException('You are not allowed');
+      throw new ForbiddenException('You are not allowed');
     // Delete the item
     await this.checklistService.delete(id);
     // Return success message

@@ -9,9 +9,9 @@ import {
   Req,
   BadRequestException,
   NotFoundException,
-  UnauthorizedException,
   Get,
   Delete,
+  ForbiddenException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Media } from '@prisma/client';
@@ -44,7 +44,7 @@ export class MediasController {
     if (!group) throw new NotFoundException('Group not found');
     // Check if user is in group
     if (!this.groupsService.isUserInGroup(group, req.user.sub))
-      throw new UnauthorizedException('You are not allowed');
+      throw new ForbiddenException('You are not allowed');
     // Create the media path and save the media on server
     const path = await this.mediasService.saveNewFileAndReturnPath(
       file,
@@ -64,7 +64,7 @@ export class MediasController {
     if (!group) throw new NotFoundException('Group not found');
     // Check if user is in group
     if (!this.groupsService.isUserInGroup(group, req.user.sub))
-      throw new UnauthorizedException('You are not allowed');
+      throw new ForbiddenException('You are not allowed');
     // Return medias
     return this.mediasService.findAll(groupId);
   }
@@ -82,7 +82,7 @@ export class MediasController {
     if (!group) throw new NotFoundException('Group not found');
     // Check if user is in group
     if (!this.groupsService.canDeleteMedia(group, media, req.user.sub))
-      throw new UnauthorizedException('You are not allowed');
+      throw new ForbiddenException('You are not allowed');
     // Delete the physique media
     await this.mediasService.deleteFile(media.path);
     // Delete the media from DB

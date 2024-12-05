@@ -1,4 +1,4 @@
-import { Controller, Get, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, Req } from '@nestjs/common';
 import { MatchingService } from './matching.service';
 import { Request } from 'express';
 

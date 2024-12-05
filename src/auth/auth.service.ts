@@ -1,7 +1,6 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Token, TokenType, User, UserStatus } from '@prisma/client';
-import { SigninDto } from './dtos/signin.dto';
 import { v4 as uuidv4 } from 'uuid';
 import * as bcrypt from 'bcrypt';
 import { expiredAtDateGenerator } from 'utils/expiredAtDateGenerator';

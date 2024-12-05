@@ -9,11 +9,11 @@ import {
   Req,
   ParseIntPipe,
   NotFoundException,
-  UnauthorizedException,
   BadRequestException,
   Query,
   UploadedFile,
   UseInterceptors,
+  ForbiddenException,
 } from '@nestjs/common';
 import { GroupsService } from './groups.service';
 import { CreateGroupDto } from './dto/create-group.dto';
@@ -58,13 +58,6 @@ export class GroupsController {
     return this.groupsService.create(body, req.user.sub);
   }
 
-  @UseInterceptors(FileInterceptor('file'))
-  @Public()
-  @Post('test')
-  async test(@UploadedFile(fileValidationPipe) file: Express.Multer.File) {
-    return await this.mediasService.saveNewFileAndReturnPath(file, Date.now());
-  }
-
   @Public()
   @Get('search')
   async search(@Query() query: SearchGroupDto) {
@@ -94,7 +87,7 @@ export class GroupsController {
     if (!group) throw new NotFoundException('Group not found');
     // Check if user is authorized
     if (!this.groupsService.IsUserAuthorized(group, req.user.sub))
-      throw new UnauthorizedException('You are not allowed');
+      throw new ForbiddenException('You are not allowed');
     // If file is uploaded
     if (file) {
       body.pathPicture = await this.mediasService.replaceMediaFileAndReturnPath(
@@ -126,7 +119,7 @@ export class GroupsController {
     if (!group) throw new NotFoundException('Group not found');
     // Check if user is author
     if (!this.groupsService.IsUserAuthorized(group, req.user.sub, true))
-      throw new UnauthorizedException('You are not allowed');
+      throw new ForbiddenException('You are not allowed');
     // Delete group
     await this.groupsService.delete(groupId);
     // Create notification for group members if members > 1
@@ -152,7 +145,7 @@ export class GroupsController {
     if (!group) throw new NotFoundException('Group not found');
     // Check if user is authorized
     if (!this.groupsService.IsUserAuthorized(group, req.user.sub))
-      throw new UnauthorizedException('You are not allowed');
+      throw new ForbiddenException('You are not allowed');
     // Update groupe dans return success message
     await this.groupsService.inviteMember(groupId, userId);
     // Create notification for invited user
@@ -176,7 +169,7 @@ export class GroupsController {
     if (!group) throw new NotFoundException('Group not found');
     // Check if user is authorized
     if (!this.groupsService.IsUserAuthorized(group, req.user.sub))
-      throw new UnauthorizedException('You are not allowed');
+      throw new ForbiddenException('You are not allowed');
     // Return members
     return this.groupsService.getMembers(groupId);
   }
@@ -192,7 +185,7 @@ export class GroupsController {
     if (!group) throw new NotFoundException('Group not found');
     // Check if user is authorized
     if (!this.groupsService.IsUserAuthorized(group, req.user.sub))
-      throw new UnauthorizedException('You are not allowed');
+      throw new ForbiddenException('You are not allowed');
     // Check if member exists in group
     if (group.members.some((member) => member.userId !== userId))
       throw new NotFoundException('Member not found');
@@ -224,7 +217,7 @@ export class GroupsController {
     if (!group) throw new NotFoundException('Group not found');
     // Check if user is authorized
     if (!this.groupsService.IsUserAuthorized(group, req.user.sub))
-      throw new UnauthorizedException('You are not allowed');
+      throw new ForbiddenException('You are not allowed');
     // Check if member exists in group
     if (group.members.some((member) => member.userId !== userId))
       throw new NotFoundException('Member not found');
@@ -261,7 +254,7 @@ export class GroupsController {
     if (!group) throw new NotFoundException('Group not found');
     // Check if user is authorized
     if (!this.groupsService.IsUserAuthorized(group, req.user.sub))
-      throw new UnauthorizedException('You are not allowed');
+      throw new ForbiddenException('You are not allowed');
     // Check if member exists in group
     if (group.members.some((member) => member.userId !== userId))
       throw new NotFoundException('Member not found');

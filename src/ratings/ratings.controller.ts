@@ -1,11 +1,8 @@
 import {
   Controller,
-  Get,
   Post,
   Body,
-  Patch,
   Param,
-  Delete,
   ParseIntPipe,
   Req,
   NotFoundException,
@@ -14,7 +11,6 @@ import {
 import { RatingsService } from './ratings.service';
 import { CreateRatingDto } from './dto/create-rating.dto';
 import { Request } from 'express';
-import { Rating } from '@prisma/client';
 import { UsersService } from 'src/users/users.service';
 
 @Controller('ratings')

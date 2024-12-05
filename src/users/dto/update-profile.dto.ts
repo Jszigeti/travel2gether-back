@@ -23,6 +23,10 @@ export class UpdateProfileDto {
   file?: Express.Multer.File;
 
   @IsOptional()
+  @IsString()
+  pathPicture?: string;
+
+  @IsOptional()
   @IsDateString()
   birthdate?: string;
 
@@ -30,10 +34,6 @@ export class UpdateProfileDto {
   @IsArray()
   @IsEnum(ProfileGender, { each: true })
   gender?: ProfileGender[];
-
-  @IsOptional()
-  @IsString()
-  pathPicture?: string;
 
   @IsOptional()
   @IsString()

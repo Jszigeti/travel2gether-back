@@ -2,6 +2,13 @@ import { IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class UpdateStageDto {
   @IsOptional()
+  file?: Express.Multer.File;
+
+  @IsOptional()
+  @IsString()
+  pathPicture?: string;
+
+  @IsOptional()
   @IsString()
   title?: string;
 
@@ -20,10 +27,6 @@ export class UpdateStageDto {
   @IsOptional()
   @IsString()
   date_to?: string;
-
-  @IsOptional()
-  @IsString()
-  pathPicture?: string;
 
   @IsOptional()
   @IsNumber()

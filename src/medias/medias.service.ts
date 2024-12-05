@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Media, Prisma } from '@prisma/client';
 import { promises as fs } from 'fs';
@@ -58,7 +58,7 @@ export class MediasService {
     // Save the media on the server
     await this.saveFile(file, fileName);
     // Return media path
-    return `/uploads/${fileName}`;
+    return `uploads/${fileName}`;
   }
 
   async replaceMediaFileAndReturnPath(

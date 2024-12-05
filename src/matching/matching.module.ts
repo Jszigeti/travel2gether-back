@@ -4,7 +4,6 @@ import { MatchingService } from './matching.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Module({
-  imports: [],
   controllers: [MatchingController],
   providers: [MatchingService, PrismaService],
 })

@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Delete,
+  ForbiddenException,
   Get,
   NotFoundException,
   Param,
@@ -9,7 +10,6 @@ import {
   Patch,
   Query,
   Req,
-  UnauthorizedException,
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
@@ -51,7 +51,7 @@ export class UsersController {
     // If password update check if old password match
     if (body.password) {
       if (!(await bcrypt.compare(body.oldPassword, user.password)))
-        throw new UnauthorizedException("Old password don't match");
+        throw new ForbiddenException("Old password don't match");
       body = { ...body, password: await bcrypt.hash(body.password, 10) };
     }
     // Remove oldPassword from body
@@ -62,7 +62,7 @@ export class UsersController {
         email: body.email,
       });
       if (existingUser && existingUser.id !== req.user.sub)
-        throw new UnauthorizedException('New email already exists');
+        throw new ForbiddenException('New email already exists');
     }
     // Update user and return success message
     return this.usersService.update(req.user.sub, updatedBody);

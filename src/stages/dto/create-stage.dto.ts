@@ -1,7 +1,13 @@
 import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
-import { isFloat32Array } from 'util/types';
 
 export class CreateStageDto {
+  @IsNotEmpty()
+  file: Express.Multer.File;
+
+  @IsOptional()
+  @IsString()
+  pathPicture: string;
+
   @IsNotEmpty()
   @IsString()
   title: string;
@@ -21,10 +27,6 @@ export class CreateStageDto {
   @IsNotEmpty()
   @IsString()
   dateTo: string;
-
-  @IsOptional()
-  @IsString()
-  pathPicture: string;
 
   @IsNotEmpty()
   @IsNumber()

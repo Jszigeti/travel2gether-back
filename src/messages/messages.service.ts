@@ -1,17 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateMessageDto } from './dto/create-message.dto';
-import { UpdateMessageDto } from './dto/update-message.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Message } from '@prisma/client';
-import { UsersService } from 'src/users/users.service';
 import { Conversation } from 'src/users/interfaces/Conversation';
 
 @Injectable()
 export class MessagesService {
-  constructor(
-    private readonly prismaService: PrismaService,
-    private readonly usersService: UsersService,
-  ) {}
+  constructor(private readonly prismaService: PrismaService) {}
 
   async sendToUser(
     body: CreateMessageDto,
@@ -162,17 +157,5 @@ export class MessagesService {
       })),
       interlocutor,
     };
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} message`;
-  }
-
-  update(id: number, updateMessageDto: UpdateMessageDto) {
-    return `This action updates a #${id} message`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} message`;
   }
 }

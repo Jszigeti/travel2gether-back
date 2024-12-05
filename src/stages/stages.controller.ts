@@ -9,9 +9,9 @@ import {
   ParseIntPipe,
   Req,
   NotFoundException,
-  UnauthorizedException,
   UploadedFile,
   UseInterceptors,
+  ForbiddenException,
 } from '@nestjs/common';
 import { StagesService } from './stages.service';
 import { CreateStageDto } from './dto/create-stage.dto';
@@ -47,7 +47,7 @@ export class StagesController {
     if (!group) throw new NotFoundException('Group not found');
     // Check if user is authorized
     if (!this.groupsService.IsUserAuthorized(group, req.user.sub))
-      throw new UnauthorizedException('You are not allowed');
+      throw new ForbiddenException('You are not allowed');
     // Save picture
     body.pathPicture = await this.mediasService.saveNewFileAndReturnPath(
       file,
@@ -89,7 +89,7 @@ export class StagesController {
     if (!group) throw new NotFoundException('Group not found');
     // Check if user is in group
     if (!this.groupsService.isUserInGroup(group, req.user.sub))
-      throw new UnauthorizedException('You are not allowed');
+      throw new ForbiddenException('You are not allowed');
     // Check if stage exist
     if (!(await this.stagesService.findOne(stageId)))
       throw new NotFoundException('Stage not found');
@@ -111,7 +111,7 @@ export class StagesController {
     if (!group) throw new NotFoundException('Group not found');
     // Check if user is authorized
     if (!this.groupsService.IsUserAuthorized(group, req.user.sub))
-      throw new UnauthorizedException('You are not allowed');
+      throw new ForbiddenException('You are not allowed');
     // Check if stage exist
     const stage = await this.stagesService.findOne(stageId);
     if (!stage) throw new NotFoundException('Stage not found');
@@ -147,7 +147,7 @@ export class StagesController {
     if (!group) throw new NotFoundException('Group not found');
     // Check if user is authorized
     if (!this.groupsService.IsUserAuthorized(group, req.user.sub))
-      throw new UnauthorizedException('You are not allowed');
+      throw new ForbiddenException('You are not allowed');
     // Check if stage exist
     const stage = await this.stagesService.findOne(stageId);
     if (!stage) throw new NotFoundException('Stage not found');

@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { CreateRatingDto } from './dto/create-rating.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Rating } from '@prisma/client';
 

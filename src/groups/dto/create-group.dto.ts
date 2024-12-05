@@ -1,12 +1,13 @@
-import {
-  IsDate,
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-  IsUrl,
-} from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateGroupDto {
+  @IsNotEmpty()
+  file: Express.Multer.File;
+
+  @IsOptional()
+  @IsString()
+  pathPicture: string;
+
   @IsNotEmpty()
   @IsString()
   title: string;
@@ -18,10 +19,6 @@ export class CreateGroupDto {
   @IsNotEmpty()
   @IsString()
   location: string;
-
-  @IsOptional()
-  @IsString()
-  pathPicture: string;
 
   @IsNotEmpty()
   @IsString()

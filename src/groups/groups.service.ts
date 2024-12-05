@@ -1,9 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { UpdateGroupDto } from './dto/update-group.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -20,7 +15,6 @@ import {
 import { GroupWithMembers } from './interfaces/GroupWithMembers';
 import { GroupWithMembersAndStages } from './interfaces/GroupWithMembersAndStages';
 import { SearchGroupDto } from './dto/search-group.dto';
-import { time } from 'console';
 import { GroupCard } from './interfaces/GroupCard';
 import { addFilter } from 'utils/addFilter';
 
