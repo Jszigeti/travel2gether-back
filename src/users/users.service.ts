@@ -226,22 +226,36 @@ export class UsersService {
         field: 'tripDuration',
       },
     ];
+    this.prismaService.profileInterests.findMany({ where: {} });
     const updates = relations.flatMap(({ key, table, field }) => {
       const items = body[key as keyof UpdateProfileDto] as string[] | undefined;
       if (!items) return [];
-      return [
-        this.prismaService[table].deleteMany({ where: { userId } }),
-        this.prismaService[table].createMany({
-          body: items.map((item) => ({ userId, [field]: item })),
-        }),
-      ];
+      if (this.prismaService[table].count({ where: { userId } }) > 0) {
+        return [
+          this.prismaService[table].deleteMany({ where: { userId } }),
+
+          this.prismaService[table].createMany({
+            data: items.map((item) => ({ userId, [field]: item })),
+          }),
+        ];
+      } else {
+        return [
+          this.prismaService[table].createMany({
+            data: items.map((item) => ({ userId, [field]: item })),
+          }),
+        ];
+      }
     });
     await this.prismaService.$transaction(updates);
     await this.prismaService.profile.update({
       where: { userId },
       data: {
+        description: body.description ? body.description : undefined,
+        pathPicture: body.pathPicture ? body.pathPicture : undefined,
         budget: body.budget ? (body.budget[0] as Budget) : undefined,
         gender: body.gender ? (body.gender[0] as ProfileGender) : undefined,
+        availableFrom: body.availableFrom ? body.availableFrom : undefined,
+        availableTo: body.availableTo ? body.availableTo : undefined,
       },
     });
     return 'Profile successfully updated';

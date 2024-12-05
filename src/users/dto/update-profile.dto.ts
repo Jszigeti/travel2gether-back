@@ -20,6 +20,9 @@ import {
 
 export class UpdateProfileDto {
   @IsOptional()
+  file?: Express.Multer.File;
+
+  @IsOptional()
   @IsDateString()
   birthdate?: string;
 

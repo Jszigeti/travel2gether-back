@@ -158,8 +158,7 @@ export class AuthService {
       // Put secure to true in prod environment
       secure: false,
       // Put same site to strict if front and back share same domain
-      sameSite: 'none',
-      maxAge: tokenType === 'accessToken' ? 1000 * 60 * 5 : 1000 * 60 * 15,
+      sameSite: 'lax',
     });
   }
 }

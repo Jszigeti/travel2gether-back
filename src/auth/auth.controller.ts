@@ -62,7 +62,7 @@ export class AuthController {
     // Generate access token
     const accessToken = await this.jwtService.signAsync(
       { sub: user.id },
-      { expiresIn: '5m' },
+      { expiresIn: '15m' },
     );
     // Create cookie and send it
     await this.authService.sendCookie(res, 'accessToken', accessToken);
