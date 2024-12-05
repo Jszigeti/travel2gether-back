@@ -8,6 +8,7 @@ import { expiredAtDateGenerator } from 'utils/expiredAtDateGenerator';
 import { SignupDto } from './dtos/signup.dto';
 import { EmailService } from 'src/email/email.service';
 import { TokenWithUserEmail } from './interfaces/TokenWithUserEmail';
+import { Response } from 'express';
 
 @Injectable()
 export class AuthService {
@@ -145,5 +146,19 @@ export class AuthService {
       );
       throw new UnauthorizedException();
     }
+  }
+
+  async sendCookie(
+    res: Response,
+    tokenType: string,
+    token: string,
+  ): Promise<Response<any, Record<string, any>>> {
+    return res.cookie(tokenType, token, {
+      httpOnly: true,
+      // Put secure to true in prod environment
+      secure: false,
+      // Put same site to strict if front and back share same domain
+      sameSite: 'lax',
+    });
   }
 }
