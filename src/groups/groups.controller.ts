@@ -51,10 +51,7 @@ export class GroupsController {
     @Body() body: CreateGroupDto,
     @UploadedFile(fileValidationPipe) file: Express.Multer.File,
   ): Promise<Group> {
-    body.pathPicture = await this.mediasService.saveNewFileAndReturnPath(
-      file,
-      Date.now(),
-    );
+    body.pathPicture = `uploads/${file.filename}`;
     return this.groupsService.create(body, req.user.sub);
   }
 
@@ -91,7 +88,6 @@ export class GroupsController {
     // If file is uploaded
     if (file) {
       body.pathPicture = await this.mediasService.replaceMediaFileAndReturnPath(
-        groupId,
         file,
         group.pathPicture,
       );

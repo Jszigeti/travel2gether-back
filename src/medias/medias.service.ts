@@ -39,37 +39,18 @@ export class MediasService {
   }
 
   // File functions
-  async saveFile(file: Express.Multer.File, fileName: string) {
-    return fs.rename(file.path, join('uploads', fileName));
-  }
-
   async deleteFile(path: string): Promise<void> {
-    const filePath = join('uploads', path);
-    return fs.unlink(filePath);
+    return fs.unlink(path);
   }
 
   // Utils functions
-  async saveNewFileAndReturnPath(
-    file: Express.Multer.File,
-    id: number,
-  ): Promise<string> {
-    // Create the file name
-    const fileName = `${id}-${file.originalname}`;
-    // Save the media on the server
-    await this.saveFile(file, fileName);
-    // Return media path
-    return `uploads/${fileName}`;
-  }
-
   async replaceMediaFileAndReturnPath(
-    referenceId: number,
     file: Express.Multer.File,
-
     path: string | undefined,
   ): Promise<string> {
     if (path) {
       await this.deleteFile(path);
     }
-    return await this.saveNewFileAndReturnPath(file, referenceId);
+    return `uploads/${file.filename}`;
   }
 }

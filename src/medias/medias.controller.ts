@@ -46,10 +46,7 @@ export class MediasController {
     if (!this.groupsService.isUserInGroup(group, req.user.sub))
       throw new ForbiddenException('You are not allowed');
     // Create the media path and save the media on server
-    const path = await this.mediasService.saveNewFileAndReturnPath(
-      file,
-      groupId,
-    );
+    const path = `uploads/${file.filename}`;
     // Save in DB and return it
     return this.mediasService.saveToDatabase(path, alt, groupId, req.user.sub);
   }

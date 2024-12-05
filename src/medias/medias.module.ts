@@ -5,6 +5,7 @@ import { MulterModule } from '@nestjs/platform-express';
 import { GroupsModule } from 'src/groups/groups.module';
 import { diskStorage } from 'multer';
 import { v4 as uuidv4 } from 'uuid';
+import { extractFormatFromFile } from 'utils/extractFormatFromFile';
 
 @Module({
   imports: [
@@ -12,7 +13,7 @@ import { v4 as uuidv4 } from 'uuid';
       storage: diskStorage({
         destination: './uploads',
         filename: (req, file, callback) => {
-          const uniqueName = `${file.originalname}`;
+          const uniqueName = `${uuidv4()}.${extractFormatFromFile(file.originalname)}`;
           callback(null, uniqueName);
         },
       }),

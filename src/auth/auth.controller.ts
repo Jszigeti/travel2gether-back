@@ -9,6 +9,8 @@ import {
   Get,
   Res,
   ForbiddenException,
+  BadRequestException,
+  NotFoundException,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { AuthService } from './auth.service';
@@ -77,10 +79,10 @@ export class AuthController {
   ): Promise<UserIdWithAvatar> {
     // Check if user exists
     const user = await this.usersService.findOne({ email: body.email });
-    if (!user) throw new ForbiddenException('Bad credentials');
+    if (!user) throw new NotFoundException('Bad credentials');
     // Compare passwords
     if (!(await bcrypt.compare(body.password, user.password)))
-      throw new ForbiddenException('Bad credentials');
+      throw new NotFoundException('Bad credentials');
     // Check user status
     const userStatus = await this.authService.checkUserStatus(
       user.status,
@@ -88,7 +90,7 @@ export class AuthController {
     );
     if (userStatus === 'BANNED') throw new ForbiddenException('User banned');
     if (userStatus === 'NOT_VERIFIED')
-      throw new ForbiddenException('User not verified');
+      throw new BadRequestException('User not verified');
     // Generate tokens
     const accessToken = await this.jwtService.signAsync(
       { sub: user.id },

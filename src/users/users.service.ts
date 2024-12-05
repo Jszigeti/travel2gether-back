@@ -252,6 +252,7 @@ export class UsersService {
       data: {
         description: body.description ? body.description : undefined,
         pathPicture: body.pathPicture ? body.pathPicture : undefined,
+        birthdate: body.birthdate ? body.birthdate : undefined,
         budget: body.budget ? (body.budget[0] as Budget) : undefined,
         gender: body.gender ? (body.gender[0] as ProfileGender) : undefined,
         availableFrom: body.availableFrom ? body.availableFrom : undefined,

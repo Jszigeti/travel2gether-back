@@ -49,10 +49,7 @@ export class StagesController {
     if (!this.groupsService.IsUserAuthorized(group, req.user.sub))
       throw new ForbiddenException('You are not allowed');
     // Save picture
-    body.pathPicture = await this.mediasService.saveNewFileAndReturnPath(
-      file,
-      Date.now(),
-    );
+    body.pathPicture = `uploads/${file.filename}`;
     // Create stage
     const stage = await this.stagesService.create(body, groupId);
     // If group members > 1, notification to all members
@@ -118,7 +115,6 @@ export class StagesController {
     // Save picture if picture
     if (file) {
       body.pathPicture = await this.mediasService.replaceMediaFileAndReturnPath(
-        stageId,
         file,
         stage.pathPicture,
       );

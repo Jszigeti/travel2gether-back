@@ -27,7 +27,7 @@ export class UpdateProfileDto {
   pathPicture?: string;
 
   @IsOptional()
-  @IsDateString()
+  @IsString()
   birthdate?: string;
 
   @IsOptional()

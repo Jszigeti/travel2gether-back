@@ -103,7 +103,6 @@ export class UsersController {
     // If file is uploaded
     if (file) {
       body.pathPicture = await this.mediasService.replaceMediaFileAndReturnPath(
-        req.user.sub,
         file,
         profile.pathPicture,
       );
