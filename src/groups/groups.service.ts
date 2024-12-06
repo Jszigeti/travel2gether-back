@@ -139,16 +139,18 @@ export class GroupsService {
     }
 
     // Filtre pour dateFrom > aujourd'hui
-    filters.push({ dateFrom: { gte: new Date() } });
+    // filters.push({ dateFrom: { gte: new Date().toISOString() } });
 
     // Critère pour dateFrom (date minimale fournie par l'utilisateur)
     if (query.dateFrom) {
-      filters.push({ dateFrom: { gte: new Date(query.dateFrom) } });
+      filters.push({
+        dateFrom: { gte: new Date(query.dateFrom).toISOString() },
+      });
     }
 
     // Critère pour dateTo (date maximale fournie par l'utilisateur)
     if (query.dateTo) {
-      filters.push({ dateTo: { lte: new Date(query.dateTo) } });
+      filters.push({ dateTo: { lte: new Date(query.dateTo).toISOString() } });
     }
 
     // Critères pour relations
