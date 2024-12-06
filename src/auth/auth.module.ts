@@ -6,14 +6,15 @@ import { JwtModule } from '@nestjs/jwt';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthGuard } from './guards/auth.guard';
 import { EmailModule } from 'src/email/email.module';
+import { GroupsModule } from 'src/groups/groups.module';
 
 @Module({
   imports: [
+    GroupsModule,
     UsersModule,
     EmailModule,
     JwtModule.register({
       global: true,
-      secret: process.env.SECRET_KEY,
     }),
   ],
   controllers: [AuthController],

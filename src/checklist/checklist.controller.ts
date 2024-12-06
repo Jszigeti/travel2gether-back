@@ -16,6 +16,7 @@ import { Request } from 'express';
 import { GroupsService } from 'src/groups/groups.service';
 import { StagesService } from 'src/stages/stages.service';
 import { Checklist } from '@prisma/client';
+import { IsMember } from 'src/groups/decorators/isMember.decorator';
 
 @Controller('checklist')
 export class ChecklistController {
@@ -66,32 +67,20 @@ export class ChecklistController {
   }
 
   @Get('groups/:groupId')
+  @IsMember(Number(':groupId'))
   async findAllGroupItems(
     @Param('groupId', ParseIntPipe) groupId: number,
-    @Req() req: Request,
   ): Promise<Checklist[]> {
-    // Check if group exists
-    const group = await this.groupsService.findOne({ id: groupId });
-    if (!group) throw new NotFoundException('Group not found');
-    // Check if user is in group
-    if (!this.groupsService.isUserInGroup(group, req.user.sub))
-      throw new ForbiddenException('You are not allowed');
     // Return items
     return this.checklistService.findAllGroupItems(groupId);
   }
 
   @Get('groups/:groupId/stages/:stageId')
+  @IsMember(Number(':groupId'))
   async findAllStageItems(
     @Param('groupId', ParseIntPipe) groupId: number,
     @Param('stageId', ParseIntPipe) stageId: number,
-    @Req() req: Request,
   ): Promise<Checklist[]> {
-    // Check if group exists
-    const group = await this.groupsService.findOne({ id: groupId });
-    if (!group) throw new NotFoundException('Group not found');
-    // Check if user is in group
-    if (!this.groupsService.isUserInGroup(group, req.user.sub))
-      throw new ForbiddenException('You are not allowed');
     // Check if stage exist
     if (!(await this.stagesService.findOne(stageId)))
       throw new NotFoundException('Stage not found');

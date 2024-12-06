@@ -19,6 +19,7 @@ import { GroupsService } from 'src/groups/groups.service';
 import { MediasService } from './medias.service';
 import { fileValidationPipe } from './pipes/file-validation';
 import { Request } from 'express';
+import { IsMember } from 'src/groups/decorators/isMember.decorator';
 
 @Controller()
 export class MediasController {
@@ -28,6 +29,7 @@ export class MediasController {
   ) {}
 
   @Post('groups/:groupId/medias')
+  @IsMember(Number(':groupId'))
   @UseInterceptors(FileInterceptor('file'))
   async uploadGroupFile(
     @UploadedFile(fileValidationPipe) file: Express.Multer.File,
@@ -39,12 +41,6 @@ export class MediasController {
     if (!file) {
       throw new BadRequestException('No file uploaded');
     }
-    // Check if group exists
-    const group = await this.groupsService.findOne({ id: groupId });
-    if (!group) throw new NotFoundException('Group not found');
-    // Check if user is in group
-    if (!this.groupsService.isUserInGroup(group, req.user.sub))
-      throw new ForbiddenException('You are not allowed');
     // Create the media path and save the media on server
     const path = `uploads/${file.filename}`;
     // Save in DB and return it
@@ -52,16 +48,10 @@ export class MediasController {
   }
 
   @Get('groups/:groupId/medias')
+  @IsMember(Number(':groupId'))
   async findAll(
     @Param('groupId', ParseIntPipe) groupId: number,
-    @Req() req: Request,
   ): Promise<Media[]> {
-    // Check if group exists
-    const group = await this.groupsService.findOne({ id: groupId });
-    if (!group) throw new NotFoundException('Group not found');
-    // Check if user is in group
-    if (!this.groupsService.isUserInGroup(group, req.user.sub))
-      throw new ForbiddenException('You are not allowed');
     // Return medias
     return this.mediasService.findAll(groupId);
   }
@@ -77,7 +67,7 @@ export class MediasController {
     // Check if group exists
     const group = await this.groupsService.findOne({ id: media.groupId });
     if (!group) throw new NotFoundException('Group not found');
-    // Check if user is in group
+    // Check if user can delete media
     if (!this.groupsService.canDeleteMedia(group, media, req.user.sub))
       throw new ForbiddenException('You are not allowed');
     // Delete the physique media
