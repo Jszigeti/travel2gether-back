@@ -67,7 +67,7 @@ export class AuthController {
     // Generate access token
     const accessToken = await this.jwtService.signAsync(
       { sub: user.id },
-      { expiresIn: '15m' },
+      { expiresIn: '15m', secret: process.env.SECRET_KEY },
     );
     // Create cookie and send it
     await this.authService.sendCookie(res, 'accessToken', accessToken);
@@ -105,18 +105,61 @@ export class AuthController {
   }
 
   @UseRefreshToken()
+  @Post('me')
+  async checkSession(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<UserIdWithAvatar> {
+    // Retrieve refresh token from DB and check if it is expired
+    const savedToken = await this.authService.findTokenAndCheckIfExpired(
+      req.user.sub,
+      TokenType.REFRESH,
+    );
+    // Throw error if no refresh token in DB
+    if (!savedToken) throw new UnauthorizedException();
+    // Throw error if compare tokens fails
+    if (!(await bcrypt.compare(req.token, savedToken.token)))
+      throw new UnauthorizedException();
+    // Retrieve user
+    const user = await this.usersService.findOne({ id: req.user.sub });
+    // Check user status
+    if (user.status === UserStatus.BANNED)
+      throw new ForbiddenException('User banned');
+    // If user status === NOT_VERIFIED, send a new mail with new verification token
+    if (!(await this.authService.isStatusVerified(user)))
+      throw new BadRequestException('User not verified');
+    // Generate tokens, hash refresh, save it in DB and send cookies
+    await this.authService.generateTokensSaveRefreshAndSendCookies(
+      req.user.sub,
+      res,
+    );
+    // Return user infos
+    return {
+      user: { id: user.id, pathPicture: user.pathPicture },
+    };
+  }
+
+  @Post('logout')
+  async logout(@Req() req: Request): Promise<string> {
+    await this.authService.deleteToken(req.user.sub, TokenType.REFRESH);
+    return 'User successfully logout';
+  }
+
+  @UseRefreshToken()
   @Post('refresh')
   async refreshToken(
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ): Promise<string> {
     // Retrieve refresh token from DB and check if it is expired
-    const savedToken = await this.authService.findToken(
+    const savedToken = await this.authService.findTokenAndCheckIfExpired(
       req.user.sub,
       TokenType.REFRESH,
     );
-    // Throw error if no refresh token in DB or if not equal
-    if (!savedToken || !(await bcrypt.compare(savedToken.token, req.token)))
+    // Throw error if no refresh token in DB
+    if (!savedToken) throw new UnauthorizedException();
+    // Throw error if compare tokens fails
+    if (!(await bcrypt.compare(req.token, savedToken.token)))
       throw new UnauthorizedException();
     // Generate tokens, hash refresh, save it in DB and send cookies
     await this.authService.generateTokensSaveRefreshAndSendCookies(
@@ -134,7 +177,7 @@ export class AuthController {
     @Param('userId', ParseIntPipe) userId: number,
   ): Promise<string> {
     // Retrieve verification token from DB and check if it is expired
-    const savedToken = await this.authService.findToken(
+    const savedToken = await this.authService.findTokenAndCheckIfExpired(
       userId,
       TokenType.VERIFICATION,
     );
@@ -199,7 +242,7 @@ export class AuthController {
     @Param('userId', ParseIntPipe) userId: number,
   ): Promise<string> {
     // Retrieve reset token from DB and check if it is expired
-    const savedToken = await this.authService.findToken(
+    const savedToken = await this.authService.findTokenAndCheckIfExpired(
       userId,
       TokenType.RESET_PASSWORD,
     );

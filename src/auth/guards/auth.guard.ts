@@ -3,6 +3,7 @@ import {
   ExecutionContext,
   ForbiddenException,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
@@ -56,7 +57,7 @@ export class AuthGuard implements CanActivate {
         const group: GroupWithMembers = await this.groupsService.findOne({
           id: groupId,
         });
-        if (!group) throw new ForbiddenException('Group does not exist');
+        if (!group) throw new NotFoundException('Group does not exist');
         // Check if the user is in group
         if (!this.groupsService.isUserInGroup(group, payload.sub))
           throw new ForbiddenException('User is not a member of the group');

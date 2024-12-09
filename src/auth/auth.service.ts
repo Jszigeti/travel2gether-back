@@ -93,6 +93,31 @@ export class AuthService {
     type: TokenType,
   ): Promise<TokenWithUserEmail> {
     const token = await this.prismaService.token.findUnique({
+      where: { userId_type: { userId, type } },
+      include: {
+        user: {
+          select: {
+            email: true,
+          },
+        },
+      },
+    });
+
+    if (!token) return null;
+    return {
+      token: token.token,
+      type: token.type,
+      expiredAt: token.expiredAt,
+      userId: token.userId,
+      email: token.user.email,
+    };
+  }
+
+  async findTokenAndCheckIfExpired(
+    userId: number,
+    type: TokenType,
+  ): Promise<TokenWithUserEmail> {
+    const token = await this.prismaService.token.findUnique({
       where: { userId_type: { userId, type }, expiredAt: { gt: new Date() } },
       include: {
         user: {
@@ -147,25 +172,6 @@ export class AuthService {
     );
   }
 
-  // async isTokenExpired(
-  //   savedToken: TokenWithUserEmail,
-  //   type: TokenType,
-  // ): Promise<boolean> {
-  //   if (new Date() > savedToken.expiredAt) {
-  //     const token = uuidv4();
-  //     await this.hashAndSaveToken(token, savedToken.userId, type);
-  //     // Send mail with token and userId
-  //     await this.emailService.sendMail(
-  //       savedToken.email,
-  //       token,
-  //       savedToken.userId,
-  //       false,
-  //     );
-  //     return true;
-  //   }
-  //   return false;
-  // }
-
   async generateTokensSaveRefreshAndSendCookies(
     userId: number,
     res: Response,
@@ -177,7 +183,7 @@ export class AuthService {
     );
     const refreshToken = await this.jwtService.signAsync(
       { sub: userId },
-      { expiresIn: '15m', secret: process.env.SECRET_REFRESH_KEY },
+      { expiresIn: '1d', secret: process.env.SECRET_REFRESH_KEY },
     );
     // Hash and save it in DB
     await this.hashAndSaveToken(refreshToken, userId, TokenType.REFRESH);
@@ -197,6 +203,7 @@ export class AuthService {
       secure: false,
       // Put same site to strict if front and back share same domain
       sameSite: 'lax',
+      maxAge: tokenType === 'accessToken' ? 1000 * 60 * 5 : 1000 * 60 * 60 * 24,
     });
   }
 }
