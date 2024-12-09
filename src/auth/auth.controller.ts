@@ -125,9 +125,6 @@ export class AuthController {
     // Check user status
     if (user.status === UserStatus.BANNED)
       throw new ForbiddenException('User banned');
-    // If user status === NOT_VERIFIED, send a new mail with new verification token
-    if (!(await this.authService.isStatusVerified(user)))
-      throw new BadRequestException('User not verified');
     // Generate tokens, hash refresh, save it in DB and send cookies
     await this.authService.generateTokensSaveRefreshAndSendCookies(
       req.user.sub,
@@ -161,6 +158,11 @@ export class AuthController {
     // Throw error if compare tokens fails
     if (!(await bcrypt.compare(req.token, savedToken.token)))
       throw new UnauthorizedException();
+    // Retrieve user
+    const user = await this.usersService.findOne({ id: req.user.sub });
+    // Check user status
+    if (user.status === UserStatus.BANNED)
+      throw new ForbiddenException('User banned');
     // Generate tokens, hash refresh, save it in DB and send cookies
     await this.authService.generateTokensSaveRefreshAndSendCookies(
       req.user.sub,
