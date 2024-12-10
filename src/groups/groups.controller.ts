@@ -33,6 +33,7 @@ import { SearchGroupDto } from './dto/search-group.dto';
 import { fileValidationPipe } from 'src/medias/pipes/file-validation';
 import { MediasService } from 'src/medias/medias.service';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { GroupCard } from './interfaces/GroupCard';
 
 @Controller('groups')
 export class GroupsController {
@@ -58,6 +59,12 @@ export class GroupsController {
   @Get('search')
   async search(@Query() query: SearchGroupDto) {
     return this.groupsService.search(query);
+  }
+
+  @Public()
+  @Get()
+  async getLastGroups(): Promise<GroupCard[]> {
+    return this.groupsService.getLastGroups();
   }
 
   @Public()

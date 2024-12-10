@@ -25,6 +25,7 @@ import { MediasService } from 'src/medias/medias.service';
 import { fileValidationPipe } from 'src/medias/pipes/file-validation';
 import { SearchUserDto } from './dto/search-user.dto';
 import { Profile } from '@prisma/client';
+import { UserAvatar } from './interfaces/userAvatar';
 
 @Controller('users')
 export class UsersController {
@@ -32,6 +33,12 @@ export class UsersController {
     private readonly usersService: UsersService,
     private readonly mediasService: MediasService,
   ) {}
+
+  @Public()
+  @Get('profiles')
+  async getLastProfiles(): Promise<UserAvatar[]> {
+    return this.usersService.getLastProfiles();
+  }
 
   // Search users
   @Public()

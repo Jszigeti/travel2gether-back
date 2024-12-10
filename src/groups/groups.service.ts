@@ -78,6 +78,39 @@ export class GroupsService {
     }
   }
 
+  async getLastGroups(): Promise<GroupCard[]> {
+    const lastGroups = await this.prismaService.group.findMany({
+      take: 10,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        ageRanges: { select: { ageRange: true } },
+        travelTypes: { select: { travelType: true } },
+        lodgings: { select: { lodging: true } },
+        languages: { select: { language: true } },
+        members: {
+          where: { status: 'ACCEPTED' },
+          select: {
+            user: { select: { pathPicture: true } },
+            role: true,
+          },
+          take: 3,
+        },
+      },
+    });
+    return lastGroups.map((group) => ({
+      id: group.id,
+      title: group.title,
+      location: group.location,
+      dateFrom: group.dateFrom,
+      dateTo: group.dateTo,
+      pathPicture: group.pathPicture,
+      members: group.members.map((member) => ({
+        pathPicture: member.user.pathPicture,
+        role: member.role,
+      })),
+    }));
+  }
+
   async search(query: SearchGroupDto): Promise<{
     groups: GroupCard[];
     total: number;
@@ -106,16 +139,18 @@ export class GroupsService {
     }
 
     // Filtre pour dateFrom > aujourd'hui
-    filters.push({ dateFrom: { gte: new Date() } });
+    // filters.push({ dateFrom: { gte: new Date().toISOString() } });
 
     // Critère pour dateFrom (date minimale fournie par l'utilisateur)
     if (query.dateFrom) {
-      filters.push({ dateFrom: { gte: new Date(query.dateFrom) } });
+      filters.push({
+        dateFrom: { gte: new Date(query.dateFrom).toISOString() },
+      });
     }
 
     // Critère pour dateTo (date maximale fournie par l'utilisateur)
     if (query.dateTo) {
-      filters.push({ dateTo: { lte: new Date(query.dateTo) } });
+      filters.push({ dateTo: { lte: new Date(query.dateTo).toISOString() } });
     }
 
     // Critères pour relations
