@@ -14,10 +14,31 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { SearchUserDto } from './dto/search-user.dto';
 import { addFilter } from 'utils/addFilter';
 import { UserAvatar } from './interfaces/userAvatar';
+import { last } from 'rxjs';
 
 @Injectable()
 export class UsersService {
   constructor(private readonly prismaService: PrismaService) {}
+
+  async getLastProfiles(): Promise<UserAvatar[]> {
+    const lastUsers = await this.prismaService.profile.findMany({
+      take: 10,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        travelTypes: { select: { travelType: true } },
+        lodgings: { select: { lodging: true } },
+        languages: { select: { language: true } },
+        tripDurations: { select: { tripDuration: true } },
+        interests: { select: { interest: true } },
+      },
+    });
+    return lastUsers.map((user) => ({
+      userId: user.userId,
+      firstname: user.firstname,
+      lastname: user.lastname,
+      pathPicture: user.pathPicture,
+    }));
+  }
 
   // Search users
   async search(query: SearchUserDto): Promise<{

@@ -10,7 +10,7 @@ import { addFilter } from 'utils/addFilter';
 export class MatchingService {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async matchGroups(userId: number): Promise<{ groups: GroupCard[] }> {
+  async matchGroups(userId: number): Promise<GroupCard[]> {
     const userProfile = await this.prismaService.profile.findUnique({
       where: { userId },
       include: {
@@ -119,23 +119,21 @@ export class MatchingService {
 
     scoredGroups.sort((a, b) => b.score - a.score);
 
-    return {
-      groups: scoredGroups.map((group) => ({
-        id: group.id,
-        title: group.title,
-        location: group.location,
-        dateFrom: group.dateFrom,
-        dateTo: group.dateTo,
-        pathPicture: group.pathPicture,
-        members: group.members.map((member) => ({
-          pathPicture: member.user.pathPicture,
-          role: member.role,
-        })),
+    return scoredGroups.map((group) => ({
+      id: group.id,
+      title: group.title,
+      location: group.location,
+      dateFrom: group.dateFrom,
+      dateTo: group.dateTo,
+      pathPicture: group.pathPicture,
+      members: group.members.map((member) => ({
+        pathPicture: member.user.pathPicture,
+        role: member.role,
       })),
-    };
+    }));
   }
 
-  async matchUsers(userId: number): Promise<{ users: UserAvatar[] }> {
+  async matchUsers(userId: number): Promise<UserAvatar[]> {
     const userProfile = await this.prismaService.profile.findUnique({
       where: { userId },
       include: {
@@ -239,13 +237,11 @@ export class MatchingService {
 
     console.log('score : ', scoredUsers);
 
-    return {
-      users: scoredUsers.map((user) => ({
-        userId: user.userId,
-        firstname: user.firstname,
-        lastname: user.lastname,
-        pathPicture: user.pathPicture,
-      })),
-    };
+    return scoredUsers.map((user) => ({
+      userId: user.userId,
+      firstname: user.firstname,
+      lastname: user.lastname,
+      pathPicture: user.pathPicture,
+    }));
   }
 }
