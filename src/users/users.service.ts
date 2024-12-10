@@ -215,27 +215,30 @@ export class UsersService {
     const { ratingsReceived, languages, ...profileWithoutRatingsUntraited } =
       profile;
     return {
-      profile: {
-        ...profileWithoutRatingsUntraited,
-        averageRating:
-          profile.ratingsReceived
-            .map((ratingReceiver) => ratingReceiver.value)
-            .reduce((acc, curr) => acc + curr, 0) /
-          profile.ratingsReceived.length,
-        ratings: profile.ratingsReceived.length,
-        travelTypes: profile.travelTypes.map(({ travelType }) => travelType),
-        lodgings: profile.lodgings.map(({ lodging }) => lodging),
-        interests: profile.interests.map(({ interest }) => interest),
-        spokenLanguages: profile.languages.map(({ language }) => language),
-        tripDurations: profile.tripDurations.map(
-          ({ tripDuration }) => tripDuration,
-        ),
-        groups: profile.groups.map(({ group }) => ({ ...group })),
-      },
+      ...profileWithoutRatingsUntraited,
+      gender: [profile.gender],
+      budget: [profile.budget],
+      averageRating:
+        profile.ratingsReceived
+          .map((ratingReceiver) => ratingReceiver.value)
+          .reduce((acc, curr) => acc + curr, 0) /
+        profile.ratingsReceived.length,
+      ratings: profile.ratingsReceived.length,
+      travelTypes: profile.travelTypes.map(({ travelType }) => travelType),
+      lodgings: profile.lodgings.map(({ lodging }) => lodging),
+      interests: profile.interests.map(({ interest }) => interest),
+      spokenLanguages: profile.languages.map(({ language }) => language),
+      tripDurations: profile.tripDurations.map(
+        ({ tripDuration }) => tripDuration,
+      ),
+      groups: profile.groups.map(({ group }) => ({ ...group })),
     };
   }
 
-  async updateProfile(userId: number, body: UpdateProfileDto): Promise<string> {
+  async updateProfile(
+    userId: number,
+    body: UpdateProfileDto,
+  ): Promise<Profile> {
     const relations = [
       { key: 'interests', table: 'profileInterests', field: 'interest' },
       { key: 'spokenLanguages', table: 'profileLanguages', field: 'language' },
@@ -247,20 +250,19 @@ export class UsersService {
         field: 'tripDuration',
       },
     ];
-    this.prismaService.profileInterests.findMany({ where: {} });
     const updates = relations.flatMap(({ key, table, field }) => {
       const items = body[key as keyof UpdateProfileDto] as string[] | undefined;
       if (!items) return [];
       if (this.prismaService[table].count({ where: { userId } }) > 0) {
         return [
           this.prismaService[table].deleteMany({ where: { userId } }),
-
           this.prismaService[table].createMany({
             data: items.map((item) => ({ userId, [field]: item })),
           }),
         ];
       } else {
         return [
+          this.prismaService[table].deleteMany({ where: { userId } }),
           this.prismaService[table].createMany({
             data: items.map((item) => ({ userId, [field]: item })),
           }),
@@ -268,7 +270,7 @@ export class UsersService {
       }
     });
     await this.prismaService.$transaction(updates);
-    await this.prismaService.profile.update({
+    return this.prismaService.profile.update({
       where: { userId },
       data: {
         description: body.description ? body.description : undefined,
@@ -280,6 +282,6 @@ export class UsersService {
         availableTo: body.availableTo ? body.availableTo : undefined,
       },
     });
-    return 'Profile successfully updated';
+    // return 'Profile successfully updated';
   }
 }

@@ -7,13 +7,13 @@ import {
   Req,
   ParseIntPipe,
   NotFoundException,
-  ForbiddenException,
 } from '@nestjs/common';
 import { MessagesService } from './messages.service';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { Request } from 'express';
 import { UsersService } from 'src/users/users.service';
 import { GroupsService } from 'src/groups/groups.service';
+import { IsMember } from 'src/groups/decorators/isMember.decorator';
 
 @Controller('messages')
 export class MessagesController {
@@ -23,10 +23,10 @@ export class MessagesController {
     private readonly groupsService: GroupsService,
   ) {}
 
-  @Post('/user/:user_receiver_id')
+  @Post('/user/:userReceiverId')
   async sendToUser(
     @Body() createMessageDto: CreateMessageDto,
-    @Param('user_receiver_id', ParseIntPipe) userReceiverId: number,
+    @Param('userReceiverId', ParseIntPipe) userReceiverId: number,
     @Req() req: Request,
   ) {
     if (!(await this.usersService.findProfile({ userId: userReceiverId })))
@@ -38,14 +38,13 @@ export class MessagesController {
     );
   }
 
-  @Post('/group/:group_receiver_id')
+  @Post('/group/:groupReceiverId')
+  @IsMember(Number(':groupReceiverId'))
   async sendToGroup(
     @Body() createMessageDto: CreateMessageDto,
-    @Param('group_receiver_id', ParseIntPipe) groupReceiverId: number,
+    @Param('groupReceiverId', ParseIntPipe) groupReceiverId: number,
     @Req() req: Request,
   ) {
-    if (!(await this.groupsService.findOne({ id: groupReceiverId })))
-      throw new NotFoundException('Group not found');
     return this.messagesService.sendToGroup(
       createMessageDto,
       groupReceiverId,
@@ -59,21 +58,18 @@ export class MessagesController {
     return this.messagesService.findConversations(userId);
   }
 
-  @Get('/group/:group_id')
+  @Get('/group/:groupId')
+  @IsMember(Number(':groupId'))
   async findGroupChat(
-    @Param('group_id', ParseIntPipe) groupId: number,
+    @Param('groupId', ParseIntPipe) groupId: number,
     @Req() req: Request,
   ) {
-    const group = await this.groupsService.findOne({ id: groupId });
-    if (!group) throw new NotFoundException('Group not found');
-    if (!group.members.some((member) => member.userId === req.user.sub))
-      throw new ForbiddenException('User not found in group');
     return this.messagesService.findGroupChat(groupId, req.user.sub);
   }
 
-  @Get('/user/:interlocutor_id')
+  @Get('/user/:interlocutorId')
   async findUserChat(
-    @Param('interlocutor_id', ParseIntPipe) interlocutorId: number,
+    @Param('interlocutorId', ParseIntPipe) interlocutorId: number,
     @Req() req: Request,
   ) {
     if (!(await this.usersService.findProfile({ userId: interlocutorId })))

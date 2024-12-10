@@ -30,7 +30,6 @@ import { Public } from 'src/auth/decorators/public.decorator';
 import { GroupWithMembersAndStages } from './interfaces/GroupWithMembersAndStages';
 import { NotificationsService } from 'src/notifications/notifications.service';
 import { SearchGroupDto } from './dto/search-group.dto';
-import { Prisma } from '@prisma/client';
 import { fileValidationPipe } from 'src/medias/pipes/file-validation';
 import { MediasService } from 'src/medias/medias.service';
 import { FileInterceptor } from '@nestjs/platform-express';

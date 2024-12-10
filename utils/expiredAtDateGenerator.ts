@@ -1,5 +1,5 @@
 export const expiredAtDateGenerator = () => {
   const expiredAt = new Date();
-  expiredAt.setMinutes(expiredAt.getMinutes() + 15);
+  expiredAt.setHours(expiredAt.getHours() + 24);
   return expiredAt;
 };

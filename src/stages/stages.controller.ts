@@ -24,6 +24,7 @@ import { NotificationsService } from 'src/notifications/notifications.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { fileValidationPipe } from 'src/medias/pipes/file-validation';
 import { NotificationReferenceType, Stage } from '@prisma/client';
+import { IsMember } from 'src/groups/decorators/isMember.decorator';
 
 @Controller()
 export class StagesController {
@@ -76,17 +77,11 @@ export class StagesController {
   }
 
   @Get('groups/:groupId/stages/:stageId')
+  @IsMember(Number(':groupId'))
   async findOne(
     @Param('groupId', ParseIntPipe) groupId: number,
     @Param('stageId', ParseIntPipe) stageId: number,
-    @Req() req: Request,
   ): Promise<Stage> {
-    // Check if group exists
-    const group = await this.groupsService.findOne({ id: groupId });
-    if (!group) throw new NotFoundException('Group not found');
-    // Check if user is in group
-    if (!this.groupsService.isUserInGroup(group, req.user.sub))
-      throw new ForbiddenException('You are not allowed');
     // Check if stage exist
     if (!(await this.stagesService.findOne(stageId)))
       throw new NotFoundException('Stage not found');
