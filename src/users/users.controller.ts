@@ -24,6 +24,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { MediasService } from 'src/medias/medias.service';
 import { fileValidationPipe } from 'src/medias/pipes/file-validation';
 import { SearchUserDto } from './dto/search-user.dto';
+import { Profile } from '@prisma/client';
 
 @Controller('users')
 export class UsersController {
@@ -94,7 +95,7 @@ export class UsersController {
     @Req() req: Request,
     @Body() body: UpdateProfileDto,
     @UploadedFile(fileValidationPipe) file?: Express.Multer.File,
-  ): Promise<string> {
+  ): Promise<Profile> {
     // Check if user exists
     const profile = await this.usersService.findProfile({
       userId: req.user.sub,
@@ -107,7 +108,7 @@ export class UsersController {
         profile.pathPicture,
       );
     }
-    // Update profile and return success message
+    // Update and return profile
     return this.usersService.updateProfile(req.user.sub, body);
   }
 }
