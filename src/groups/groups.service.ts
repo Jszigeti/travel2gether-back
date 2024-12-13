@@ -65,15 +65,15 @@ export class GroupsService {
     });
     if (group) {
       return {
-        group: {
-          ...group,
-          members: group.members.map((member) => ({
-            pathPicture: member.user.pathPicture,
-            userId: member.user.userId,
-            firstname: member.user.firstname,
-          })),
-          stages: group.stages,
-        },
+        ...group,
+        profiles: group.members.map((member) => ({
+          role: member.role,
+          status: member.status,
+          pathPicture: member.user.pathPicture,
+          userId: member.user.userId,
+          firstname: member.user.firstname,
+        })),
+        stages: group.stages,
       };
     }
   }

@@ -235,8 +235,6 @@ export class MatchingService {
 
     scoredUsers.sort((a, b) => b.score - a.score);
 
-    console.log('score : ', scoredUsers);
-
     return scoredUsers.map((user) => ({
       userId: user.userId,
       firstname: user.firstname,
