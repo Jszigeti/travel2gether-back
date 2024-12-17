@@ -104,7 +104,7 @@ export class GroupsService {
       dateFrom: group.dateFrom,
       dateTo: group.dateTo,
       pathPicture: group.pathPicture,
-      members: group.members.map((member) => ({
+      profiles: group.members.map((member) => ({
         pathPicture: member.user.pathPicture,
         role: member.role,
       })),
@@ -215,7 +215,7 @@ export class GroupsService {
         dateFrom: group.dateFrom,
         dateTo: group.dateTo,
         pathPicture: group.pathPicture,
-        members: group.members.map((member) => ({
+        profiles: group.members.map((member) => ({
           role: member.role,
           pathPicture: member.user.pathPicture,
         })),

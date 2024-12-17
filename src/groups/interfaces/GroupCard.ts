@@ -7,7 +7,7 @@ export interface GroupCard {
   dateFrom: string;
   dateTo: string;
   pathPicture: string;
-  members: {
+  profiles: {
     role: GroupRole;
     pathPicture: string;
   }[];

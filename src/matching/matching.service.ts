@@ -30,7 +30,11 @@ export class MatchingService {
     const userAgeRange = getAgeRange(userAge);
     filters.push({ ageRanges: { some: { ageRange: userAgeRange } } });
 
-    if (userProfile.gender && userProfile.gender !== 'OTHER') {
+    if (
+      userProfile.gender &&
+      userProfile.gender !== 'OTHER' &&
+      userProfile.gender !== 'NOT_SPECIFIED'
+    ) {
       filters.push({ gender: userProfile.gender });
     }
 
@@ -126,7 +130,7 @@ export class MatchingService {
       dateFrom: group.dateFrom,
       dateTo: group.dateTo,
       pathPicture: group.pathPicture,
-      members: group.members.map((member) => ({
+      profiles: group.members.map((member) => ({
         pathPicture: member.user.pathPicture,
         role: member.role,
       })),
@@ -170,7 +174,7 @@ export class MatchingService {
 
     // Recherche d'utilisateurs
     const users = await this.prismaService.profile.findMany({
-      where: { AND: filters },
+      where: { AND: filters, NOT: { userId: userProfile.userId } },
       take: 10,
       include: {
         travelTypes: { select: { travelType: true } },
@@ -182,6 +186,7 @@ export class MatchingService {
     });
     if (users.length < 10) {
       const lastUsers = await this.prismaService.profile.findMany({
+        where: { NOT: { userId: userProfile.userId } },
         take: 10 - users.length,
         orderBy: { createdAt: 'desc' },
         include: {
@@ -234,8 +239,6 @@ export class MatchingService {
     });
 
     scoredUsers.sort((a, b) => b.score - a.score);
-
-    console.log('score : ', scoredUsers);
 
     return scoredUsers.map((user) => ({
       userId: user.userId,

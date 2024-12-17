@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -48,6 +49,25 @@ export class UsersController {
   }
 
   // User endpoints
+  @Get()
+  async getUser(@Req() req: Request): Promise<{
+    id: number;
+    email: string;
+    firstname: string;
+    lastname: string;
+  }> {
+    // Check if user exists
+    const user = await this.usersService.findOne({ id: req.user.sub });
+    if (!user) throw new NotFoundException('User not found');
+    // Return user infos
+    return {
+      id: user.id,
+      email: user.email,
+      firstname: user.firstname,
+      lastname: user.lastname,
+    };
+  }
+
   @Patch()
   async updateUser(
     @Req() req: Request,
@@ -70,7 +90,7 @@ export class UsersController {
         email: body.email,
       });
       if (existingUser && existingUser.id !== req.user.sub)
-        throw new ForbiddenException('New email already exists');
+        throw new BadRequestException('New email already exists');
     }
     // Update user and return success message
     return this.usersService.update(req.user.sub, updatedBody);
