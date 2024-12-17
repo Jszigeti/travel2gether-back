@@ -1,7 +1,7 @@
 import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateGroupDto {
-  @IsNotEmpty()
+  // @IsNotEmpty()
   file: Express.Multer.File;
 
   @IsOptional()
