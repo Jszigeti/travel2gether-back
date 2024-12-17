@@ -40,10 +40,10 @@ model Profile {
   firstname             String                    @db.VarChar(30)
   lastname              String                    @db.VarChar(30)
   birthdate             String?                   @db.VarChar(10)
-  gender                ProfileGender?            @default(OTHER) 
-  pathPicture           String?                   @map("path_picture") @db.VarChar(255)
+  gender                ProfileGender?            @default(NOT_SPECIFIED) 
+  pathPicture           String?                   @map("path_picture") @db.VarChar(255) @default("dskkdkshk")
   description           String?                   @db.VarChar(2000)
-  budget                Budget?       
+  budget                Budget?                   @default(NOT_SPECIFIED)
   availableFrom         String?                   @map("available_from")
   availableTo           String?                   @map("available_to")
   createdAt             DateTime                  @map("created_at") @default(now())
@@ -319,6 +319,7 @@ enum ProfileGender {
   MALE
   FEMALE
   OTHER
+  NOT_SPECIFIED
 }
 
 enum Budget {
@@ -326,6 +327,7 @@ enum Budget {
   MIDDLE
   HIGH
   LUXURY
+  NOT_SPECIFIED
 }
 
 enum UserStatus {

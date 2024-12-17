@@ -9,7 +9,7 @@ export class EmailService {
     userId: number,
     userVerification: boolean = true,
   ): Promise<void> {
-    const url = `http://localhost:3000/${userVerification ? 'user-verification' : 'reset-password'}/${userId}/${token}`;
+    const url = `${process.env.FRONT_URL}/${userVerification ? 'user-verification' : 'reset-password'}/${userId}/${token}`;
     let apiInstance: any = new brevo.TransactionalEmailsApi();
 
     let apiKey = apiInstance.authentications['apiKey'];

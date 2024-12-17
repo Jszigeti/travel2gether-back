@@ -58,12 +58,6 @@ export class AuthController {
       TokenType.VERIFICATION,
       email,
     );
-    const verificationToken = uuidv4();
-    await this.authService.hashAndSaveToken(
-      verificationToken,
-      user.id,
-      TokenType.VERIFICATION,
-    );
     // Generate access token
     const accessToken = await this.jwtService.signAsync(
       { sub: user.id },
@@ -173,7 +167,7 @@ export class AuthController {
   }
 
   @Public()
-  @Get('user-verification/:userId/:verificationToken')
+  @Post('user-verification/:userId/:verificationToken')
   async validateUser(
     @Param('verificationToken') verificationToken: string,
     @Param('userId', ParseIntPipe) userId: number,
@@ -217,20 +211,11 @@ export class AuthController {
     const user = await this.usersService.findOne(body);
     // Throw fake success if no user in DB
     if (!user) return 'Email with instructions send, please check your mails';
-    // Generate reset token
-    const passwordResetToken = uuidv4();
-    // Hash and save it in DB
-    await this.authService.hashAndSaveToken(
-      passwordResetToken,
+    // Generate verification token, hash, save it in DB and send it
+    await this.authService.generateHashSaveAndSendToken(
       user.id,
       TokenType.RESET_PASSWORD,
-    );
-    // Send mail with password reset token and userId
-    await this.emailService.sendMail(
       user.email,
-      passwordResetToken,
-      user.id,
-      false,
     );
     // Return success message
     return 'Email with instructions send, please check your mails';
