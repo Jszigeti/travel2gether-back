@@ -262,7 +262,6 @@ export class UsersService {
         ];
       } else {
         return [
-          this.prismaService[table].deleteMany({ where: { userId } }),
           this.prismaService[table].createMany({
             data: items.map((item) => ({ userId, [field]: item })),
           }),

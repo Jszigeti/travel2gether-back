@@ -17,6 +17,7 @@ import { GroupWithMembersAndStages } from './interfaces/GroupWithMembersAndStage
 import { SearchGroupDto } from './dto/search-group.dto';
 import { GroupCard } from './interfaces/GroupCard';
 import { addFilter } from 'utils/addFilter';
+import { group } from 'console';
 
 @Injectable()
 export class GroupsService {
@@ -232,7 +233,7 @@ export class GroupsService {
       { key: 'travelTypes', table: 'groupTravelTypes', field: 'travelType' },
       { key: 'lodgings', table: 'groupLodgings', field: 'lodging' },
       { key: 'spokenLanguages', table: 'groupLanguages', field: 'language' },
-      { key: 'ageRanges', table: 'groupAgeRange', field: 'ageRange' },
+      { key: 'ageRanges', table: 'groupAgeRanges', field: 'ageRange' },
     ];
     const updates = relations.flatMap(({ key, table, field }) => {
       const items = body[key as keyof UpdateGroupDto] as string[] | undefined;
@@ -240,7 +241,7 @@ export class GroupsService {
       return [
         this.prismaService[table].deleteMany({ where: { groupId: id } }),
         this.prismaService[table].createMany({
-          body: items.map((item) => ({ id, [field]: item })),
+          data: items.map((item) => ({ groupId: id, [field]: item })),
         }),
       ];
     });
@@ -248,6 +249,12 @@ export class GroupsService {
     return this.prismaService.group.update({
       where: { id },
       data: {
+        title: body.title,
+        location: body.location,
+        dateFrom: body.dateFrom,
+        dateTo: body.dateTo,
+        description: body.description,
+        pathPicture: body.pathPicture,
         budget: body.budget ? (body.budget[0] as Budget) : undefined,
         gender: body.gender ? (body.gender[0] as GroupGender) : undefined,
       },
