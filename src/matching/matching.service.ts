@@ -95,7 +95,11 @@ export class MatchingService {
       if (group.ageRanges.some((r) => r.ageRange === userAgeRange)) score++;
       if (group.gender === userProfile.gender || group.gender === 'MIXED')
         score++;
-      if (group.budget === userProfile.budget) score++;
+      if (
+        group.budget === userProfile.budget ||
+        userProfile.budget === 'NOT_SPECIFIED'
+      )
+        score++;
       if (
         userProfile.availableFrom &&
         userProfile.availableTo &&
@@ -204,7 +208,11 @@ export class MatchingService {
     const scoredUsers = users.map((user) => {
       let score = 0;
 
-      if (user.budget === userProfile.budget) score++;
+      if (
+        user.budget === userProfile.budget ||
+        userProfile.budget === 'NOT_SPECIFIED'
+      )
+        score++;
       if (
         userProfile.availableFrom &&
         userProfile.availableTo &&
