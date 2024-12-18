@@ -253,21 +253,12 @@ export class UsersService {
     const updates = relations.flatMap(({ key, table, field }) => {
       const items = body[key as keyof UpdateProfileDto] as string[] | undefined;
       if (!items) return [];
-      if (this.prismaService[table].count({ where: { userId } }) > 0) {
-        return [
-          this.prismaService[table].deleteMany({ where: { userId } }),
-          this.prismaService[table].createMany({
-            data: items.map((item) => ({ userId, [field]: item })),
-          }),
-        ];
-      } else {
-        return [
-          this.prismaService[table].deleteMany({ where: { userId } }),
-          this.prismaService[table].createMany({
-            data: items.map((item) => ({ userId, [field]: item })),
-          }),
-        ];
-      }
+      return [
+        this.prismaService[table].deleteMany({ where: { userId } }),
+        this.prismaService[table].createMany({
+          data: items.map((item) => ({ userId, [field]: item })),
+        }),
+      ];
     });
     await this.prismaService.$transaction(updates);
     return this.prismaService.profile.update({
