@@ -6,11 +6,15 @@ import {
   Lodgings,
   TravelTypes,
 } from '@prisma/client';
-import { IsArray, IsEnum, IsString, IsUrl, IsOptional } from 'class-validator';
+import { IsArray, IsEnum, IsString, IsOptional } from 'class-validator';
 
 export class UpdateGroupDto {
   @IsOptional()
   file?: Express.Multer.File;
+
+  @IsOptional()
+  @IsString()
+  title: string;
 
   @IsOptional()
   @IsString()
