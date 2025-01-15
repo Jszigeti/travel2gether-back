@@ -22,10 +22,9 @@ async function bootstrap() {
       forbidNonWhitelisted: true, // Retourne une erreur pour les champs non définis
     }),
   );
-  app.useStaticAssets(join('uploads'), {
+  app.useStaticAssets(join(__dirname, '..', 'uploads'), {
     prefix: '/uploads',
   });
-
   const config = new DocumentBuilder()
     .setTitle('Travel2Gether')
     .setDescription('Travel2Gether API description')
@@ -33,6 +32,8 @@ async function bootstrap() {
     .build();
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, documentFactory);
-  await app.listen(process.env.PORT ?? 3000);
+  const port = process.env.PORT ?? 3000;
+  await app.listen(port);
+  console.log(`Application running on port ${port}`);
 }
 bootstrap();

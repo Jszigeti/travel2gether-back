@@ -197,12 +197,11 @@ export class AuthService {
     tokenType: string,
     token: string,
   ): Promise<void> {
+    const isProduction = process.env.NODE_ENV === 'production' || false;
     res.cookie(tokenType, token, {
       httpOnly: true,
-      // Put secure to true in prod environment
-      secure: false,
-      // Put same site to strict if front and back share same domain
-      sameSite: 'lax',
+      secure: isProduction,
+      sameSite: isProduction ? 'strict' : 'lax',
       maxAge: tokenType === 'accessToken' ? 1000 * 60 * 5 : 1000 * 60 * 60 * 24,
     });
   }
