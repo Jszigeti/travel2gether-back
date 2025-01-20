@@ -23,7 +23,7 @@ export class MessagesController {
     private readonly groupsService: GroupsService,
   ) {}
 
-  @Post('/user/:userReceiverId')
+  @Post('/users/:userReceiverId')
   async sendToUser(
     @Body() createMessageDto: CreateMessageDto,
     @Param('userReceiverId', ParseIntPipe) userReceiverId: number,
@@ -38,7 +38,7 @@ export class MessagesController {
     );
   }
 
-  @Post('/group/:groupReceiverId')
+  @Post('/groups/:groupReceiverId')
   @IsMember(Number(':groupReceiverId'))
   async sendToGroup(
     @Body() createMessageDto: CreateMessageDto,
@@ -58,7 +58,7 @@ export class MessagesController {
     return this.messagesService.findConversations(userId);
   }
 
-  @Get('/group/:groupId')
+  @Get('/groups/:groupId')
   @IsMember(Number(':groupId'))
   async findGroupChat(
     @Param('groupId', ParseIntPipe) groupId: number,
@@ -67,7 +67,7 @@ export class MessagesController {
     return this.messagesService.findGroupChat(groupId, req.user.sub);
   }
 
-  @Get('/user/:interlocutorId')
+  @Get('/users/:interlocutorId')
   async findUserChat(
     @Param('interlocutorId', ParseIntPipe) interlocutorId: number,
     @Req() req: Request,
