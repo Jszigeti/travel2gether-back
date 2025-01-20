@@ -38,6 +38,7 @@ SECRET_REFRESH_KEY="secret_key_for_refresh_token"
 IS_PUBLIC_KEY="public_key"
 BREVO_API_KEY="your_brevo_api_key"
 FRONT_URL="https://example.com"
+NODE_ENV=development | production
 NATS_DNS=XXX.XXX.X.XX
 NATS_PORT=XXXX
 ```
@@ -76,18 +77,6 @@ In the project directory, you can run the following scripts:
   $ npm run test
   ```
 
-- Run end-to-end tests:
-
-  ```bash
-  $ npm run test:e2e
-  ```
-
-- Run test coverage:
-
-  ```bash
-  $ npm run test:cov
-  ```
-
 - Run database migrations:
 
   ```bash
@@ -115,6 +104,7 @@ The following environment variables are used in this project:
 - `IS_PUBLIC_KEY`: The key to identify public endpoints.
 - `BREVO_API_KEY`: The API key for Brevo.
 - `FRONT_URL`: The URL of the front-end application.
+- `NODE_ENV`: The environment in which the application is running (`development` or `production`).
 - `NATS_DNS`: The DNS of the NATS server.
 - `NATS_PORT`: The port of the NATS server.
 
