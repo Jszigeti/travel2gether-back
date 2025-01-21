@@ -307,7 +307,7 @@ export class GroupsController {
     const group = await this.groupsService.findOne({ id: groupId });
     if (!group) throw new NotFoundException('Group not found');
     // Check if user exists in group
-    if (group.members.some((member) => member.userId !== req.user.sub))
+    if (!group.members.some((member) => member.userId === req.user.sub))
       throw new NotFoundException('User not found');
     // Accept group invitation
     await this.groupsService.manageMemberStatus(
@@ -333,9 +333,9 @@ export class GroupsController {
     // Check if group exists
     const group = await this.groupsService.findOne({ id: groupId });
     if (!group) throw new NotFoundException('Group not found');
-    // Check if user exists in group
-    if (group.members.some((member) => member.userId !== req.user.sub))
-      throw new NotFoundException('User not found');
+    // Check if member exists in group
+    if (!group.members.some((member) => member.userId === req.user.sub))
+      throw new NotFoundException('Member not found');
     // Deny group invitation
     await this.groupsService.denyInvitation(groupId, req.user.sub);
     // Return success message
