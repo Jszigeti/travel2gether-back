@@ -12,8 +12,8 @@ import { join } from 'path';
   imports: [
     MulterModule.register({
       storage: diskStorage({
-        destination: join(__dirname, '..', '..', 'uploads'),
-        filename: (req, file, callback) => {
+        destination: join(__dirname, '../../../uploads'),
+        filename: (_, file, callback) => {
           const uniqueName = `${uuidv4()}.${extractFormatFromFile(file.originalname)}`;
           callback(null, uniqueName);
         },
@@ -24,6 +24,6 @@ import { join } from 'path';
 
   controllers: [MediasController],
   providers: [MediasService],
-  exports: [MediasService],
+  exports: [MediasService, MulterModule],
 })
 export class MediasModule {}

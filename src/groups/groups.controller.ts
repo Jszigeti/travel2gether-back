@@ -189,7 +189,7 @@ export class GroupsController {
     if (!this.groupsService.IsUserAuthorized(group, req.user.sub))
       throw new ForbiddenException('You are not allowed');
     // Check if member exists in group
-    if (group.members.some((member) => member.userId !== userId))
+    if (!group.members.some((member) => member.userId === userId))
       throw new NotFoundException('Member not found');
     // Update member status
     await this.groupsService.manageMemberStatus(
@@ -221,7 +221,7 @@ export class GroupsController {
     if (!this.groupsService.IsUserAuthorized(group, req.user.sub))
       throw new ForbiddenException('You are not allowed');
     // Check if member exists in group
-    if (group.members.some((member) => member.userId !== userId))
+    if (!group.members.some((member) => member.userId === userId))
       throw new NotFoundException('Member not found');
     // Update member status
     await this.groupsService.manageMemberStatus(
@@ -258,7 +258,7 @@ export class GroupsController {
     if (!this.groupsService.IsUserAuthorized(group, req.user.sub))
       throw new ForbiddenException('You are not allowed');
     // Check if member exists in group
-    if (group.members.some((member) => member.userId !== userId))
+    if (!group.members.some((member) => member.userId === userId))
       throw new NotFoundException('Member not found');
     // Update member and return success message
     await this.groupsService.manageMemberRole(

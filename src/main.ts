@@ -22,7 +22,7 @@ async function bootstrap() {
       forbidNonWhitelisted: true, // Retourne une erreur pour les champs non définis
     }),
   );
-  app.useStaticAssets(join(__dirname, '..', 'uploads'), {
+  app.useStaticAssets(join(__dirname, '../../uploads'), {
     prefix: '/uploads',
   });
   const config = new DocumentBuilder()
