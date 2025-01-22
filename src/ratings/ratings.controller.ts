@@ -1,34 +1,44 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Param,
+  ParseIntPipe,
+  Req,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { RatingsService } from './ratings.service';
 import { CreateRatingDto } from './dto/create-rating.dto';
-import { UpdateRatingDto } from './dto/update-rating.dto';
+import { Request } from 'express';
+import { UsersService } from 'src/users/users.service';
 
 @Controller('ratings')
 export class RatingsController {
-  constructor(private readonly ratingsService: RatingsService) {}
+  constructor(
+    private readonly ratingsService: RatingsService,
+    private readonly usersService: UsersService,
+  ) {}
 
-  @Post()
-  create(@Body() createRatingDto: CreateRatingDto) {
-    return this.ratingsService.create(createRatingDto);
-  }
-
-  @Get()
-  findAll() {
-    return this.ratingsService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.ratingsService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateRatingDto: UpdateRatingDto) {
-    return this.ratingsService.update(+id, updateRatingDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.ratingsService.remove(+id);
+  @Post(':ratedId')
+  async create(
+    @Body() createRatingDto: CreateRatingDto,
+    @Param('ratedId', ParseIntPipe) ratedId: number,
+    @Req() req: Request,
+  ): Promise<string> {
+    // Check if rated user exists
+    if (!(await this.usersService.findOne({ id: ratedId })))
+      throw new NotFoundException('User not found');
+    // Check if user already rate the rated user
+    if (await this.ratingsService.findOne(req.user.sub, ratedId))
+      throw new BadRequestException('You already rated this user');
+    // Record the rate
+    await this.ratingsService.create(
+      createRatingDto.value,
+      req.user.sub,
+      ratedId,
+    );
+    // Return success message
+    return 'User successfully rated';
   }
 }

@@ -1,34 +1,38 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Patch,
+  Param,
+  Delete,
+  Req,
+  ParseIntPipe,
+} from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
-import { CreateNotificationDto } from './dto/create-notification.dto';
-import { UpdateNotificationDto } from './dto/update-notification.dto';
+import { Request } from 'express';
+import { Notification } from '@prisma/client';
 
 @Controller('notifications')
 export class NotificationsController {
   constructor(private readonly notificationsService: NotificationsService) {}
 
-  @Post()
-  create(@Body() createNotificationDto: CreateNotificationDto) {
-    return this.notificationsService.create(createNotificationDto);
-  }
-
   @Get()
-  findAll() {
-    return this.notificationsService.findAll();
+  async findAll(@Req() req: Request): Promise<Notification[]> {
+    return this.notificationsService.findAll(req.user.sub);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.notificationsService.findOne(+id);
+  @Patch(':notificationId')
+  async markAsRead(
+    @Param('notificationId', ParseIntPipe) notificationId: number,
+  ): Promise<string> {
+    await this.notificationsService.markAsRead(notificationId);
+    return 'Notification successfully marked as read';
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateNotificationDto: UpdateNotificationDto) {
-    return this.notificationsService.update(+id, updateNotificationDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.notificationsService.remove(+id);
+  @Delete(':notificationId')
+  async delete(
+    @Param('notificationId', ParseIntPipe) notificationId: number,
+  ): Promise<string> {
+    await this.notificationsService.delete(notificationId);
+    return 'Notification successfully deleted';
   }
 }

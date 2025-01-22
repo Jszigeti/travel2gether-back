@@ -8,276 +8,348 @@ datasource db {
 }
 
 model User {
-  id                    Int                       @id @default(autoincrement())
-  email                 String                    @unique @db.VarChar(100)
-  password              String                    @db.VarChar(255)
-  status                UserStatus                @default(NOT_VERIFIED)
-  createdAt             DateTime                  @map("created_at") @default(now())
-  updatedAt             DateTime                  @map("updated_at") @updatedAt
-  profile               Profile?            
-}   
-
-model Profile {   
-  userId                Int                       @id @map("user_id")
-  firstname             String                    @db.VarChar(30)
-  lastname              String                    @db.VarChar(30)
-  birthdate             String                    @db.VarChar(10)
-  gender                Gender                    @default(OTHER) 
-  pathPicture           String?                   @map("path_picture") @db.VarChar(255)
-  description           String?                   @db.VarChar(2000)
-  budget                Budget?       
-  availableFrom         DateTime?                 @map("available_from")
-  availableTo           DateTime?                 @map("available_to")
-  createdAt             DateTime                  @map("created_at") @default(now())
-  updatedAt             DateTime                  @map("updated_at") @updatedAt
-  user                  User                      @relation(fields: [userId], references: [id])
-  travelTypes           ProfileTravelTypes[]  
-  lodgings              ProfileLodgings[]         
-  interests             ProfileInterests[]        
-  languages             ProfileLanguages[]        
-  tripDurations         ProfileTripDurations[]    
-  notifications         Notification[]        
-  medias                Media[]       
-  groups                GroupUser[]       
-  ratingsGiven          Rating[]                  @relation("RaterUser")
-  ratingsReceived       Rating[]                  @relation("RatedUser")
-  moderatingsGiven      Moderating[]              @relation("ModeraterUser")
-  moderatingsReceived   Moderating[]              @relation("ModeratedUser")
-  messagesSent          Message[]                 @relation("SenderUser")
-  messagesReceived      Message[]                 @relation("ReceiverUser")
-}   
-
-model Stage {   
-  id                    Int                       @id @default(autoincrement())
-  title                 String                    @db.VarChar(100)
-  description           String                    @db.VarChar(2000)
-  dateFrom              DateTime                  @map("date_from")
-  dateTo                DateTime                  @map("date_to")
-  pathPicture           String                    @map("path_picture") @db.VarChar(255)
-  address               String                    @db.VarChar(255)
-  longitude             Float       
-  latitude              Float       
-  groupId               Int                       @map("group_id")
-  createdAt             DateTime                  @map("created_at") @default(now())
-  updatedAt             DateTime                  @map("updated_at") @updatedAt
-  group                 Group                     @relation(fields: [groupId], references: [id])
-  checklist             Checklist[]   
-}   
-
-model Group {   
-  id                    Int                       @id @default(autoincrement())
-  title                 String                    @db.VarChar(100)
-  description           String                    @db.VarChar(2000)
-  location              String                    @db.VarChar(255)
-  dateFrom              DateTime                  @map("date_from")
-  dateTo                DateTime                  @map("date_to") 
-  pathPicture           String                    @map("path_picture") @db.VarChar(255)
-  status                GroupStatus               @default(PENDING)
-  genderType            GenderType?               @default(MIXED) @map("gender_type")
-  budget                Budget?       
-  stages                Stage[]       
-  travelTypes           GroupTravelTypes[]              
-  lodgings              GroupLodgings[]                 
-  languages             GroupLanguages[]                
-  ageRanges             GroupAgeRanges[]                
-  members               GroupUser[]       
-  medias                Media[]       
-  messagesReceived      Message[]       
-  checklist             Checklist[]       
-}       
-
-model GroupUser {       
-  userId                Int                       @map("user_id")
-  groupId               Int                       @map("group_id")
-  role                  GroupRole       
-  status                GroupStatus       
-  createdAt             DateTime                  @map("created_at") @default(now())
-  updatedAt             DateTime                  @map("updated_at")  @updatedAt
-  user                  Profile                   @relation(fields: [userId], references: [userId])
-  group                 Group                     @relation(fields: [groupId], references: [id])
-  @@id([userId, groupId])       
-}       
-
-model Notification {        
-  id                    Int                       @id @default(autoincrement())
-  userId                Int                       @map("user_id")
-  referenceId           Int                       @map("reference_id")
-  referenceType         ReferenceType             @map("reference_type")
-  isRead                Boolean                   @default(false) @map("is_read")
-  createdAt             DateTime                  @map("created_at") @default(now())
-  updatedAt             DateTime                  @map("updated_at") @updatedAt
-  user                  Profile                   @relation(fields: [userId], references: [userId])
-}       
-
-model Media {       
-  id                    Int                       @id @default(autoincrement())
-  userId                Int                       @map("user_id")
-  groupId               Int                       @map("group_id")
-  alt                   String                    @db.VarChar(255)
-  path                  String                    @unique @db.VarChar(255)
-  createdAt             DateTime                  @map("created_at") @default(now())
-  user                  Profile                   @relation(fields: [userId], references: [userId])
-  group                 Group                     @relation(fields: [groupId], references: [id])
-}       
-
-model Rating {        
-  raterId               Int                       @map("rater_id")
-  ratedId               Int                       @map("rated_id")
-  value                 Int       
-  createdAt             DateTime                  @map("created_at") @default(now())
-  rater                 Profile                   @relation("RaterUser", fields: [raterId], references: [userId])
-  rated                 Profile                   @relation("RatedUser", fields: [ratedId], references: [userId])
-  @@id([raterId, ratedId])        
-}       
-
-model Moderating {        
-  moderaterId           Int                       @map("moderater_id")
-  moderatedId           Int                       @map("moderated_id")
-  value                 Int       
-  createdAt             DateTime                  @map("created_at") @default(now())
-  moderater             Profile                   @relation("ModeraterUser", fields: [moderaterId], references: [userId])
-  moderated             Profile                   @relation("ModeratedUser", fields: [moderatedId], references: [userId])
-  @@id([moderaterId, moderatedId])        
-}       
-
-model Message {       
-  id                    Int                       @id @default(autoincrement())
-  content               String                    @db.VarChar(1000)
-  senderId              Int                       @map("sender_id")
-  userReceiverId        Int?                      @map("user_receiver_id")
-  groupReceiverId       Int?                      @map("group_receiver_id")
-  createdAt             DateTime                  @map("created_at") @default(now())
-  senderUser            Profile                   @relation("SenderUser", fields: [senderId], references: [userId])
-  receiverUser          Profile?                  @relation("ReceiverUser", fields: [userReceiverId], references: [userId])
-  receiverGroup         Group?                    @relation(fields: [groupReceiverId], references: [id])
-}       
-
-model Checklist {       
-  id                    Int                       @id @default(autoincrement())
-  stageId               Int?                      @map("stage_id")
-  groupId               Int?                      @map("group_id")
-  item                  String                    @db.VarChar(50)
-  createdAt             DateTime                  @map("created_at") @default(now())
-  updatedAt             DateTime                  @map("updated_at") @updatedAt
-  stage                 Stage?                    @relation(fields: [stageId], references: [id])
-  group                 Group?                    @relation(fields: [groupId], references: [id])
-}       
-
-model TravelType {        
-  id                    Int                       @id @default(autoincrement())
-  name                  String                    @unique @db.VarChar(100)
-  profiles              ProfileTravelTypes[]             
-  groups                GroupTravelTypes[]               
-}   
-
-model Lodging {   
-  id                    Int                       @id @default(autoincrement())
-  name                  String                    @unique @db.VarChar(100)
-  profiles              ProfileLodgings[]                 
-  groups                GroupLodgings[]                   
-}       
-
-model Interest {        
-  id                    Int                       @id @default(autoincrement())
-  name                  String                    @unique @db.VarChar(100)
-  profiles              ProfileInterests[]         
-}       
-
-model Language {        
-  id                    Int                       @id @default(autoincrement())
-  name                  String                    @unique @db.VarChar(100)
-  profiles              ProfileLanguages[]                 
-  groups                GroupLanguages[]                   
-}       
-
-model TripDuration {        
-  id                    Int                       @id @default(autoincrement())
-  name                  String                    @unique @db.VarChar(100)
-  profiles              ProfileTripDurations[]         
-}   
-
-model AgeRange {    
-  id                    Int                       @id @default(autoincrement())
-  name                  String                    @unique @db.VarChar(100)
-  groups                GroupAgeRanges[]        
-}   
-
-model ProfileTravelTypes {    
-  userId                Int                       @map("user_id")
-  travelTypeId          Int                       @map("travel_type_id")
-  profile               Profile                   @relation(fields: [userId], references: [userId])
-  travelType            TravelType                @relation(fields: [travelTypeId], references: [id])
-  @@id([userId, travelTypeId])    
-}   
-
-model ProfileLodgings {   
-  userId                Int                       @map("user_id")                          
-  lodgingId             Int                       @map("lodging_id")
-  profile               Profile                   @relation(fields: [userId], references: [userId])
-  lodging               Lodging                   @relation(fields: [lodgingId], references: [id])
-  @@id([userId, lodgingId])   
-}   
-
-model ProfileInterests {    
-  userId                Int                       @map("user_id")
-  interestId            Int                       @map("interest_id")
-  profile               Profile                   @relation(fields: [userId], references: [userId])
-  interest              Interest                  @relation(fields: [interestId], references: [id])
-  @@id([userId, interestId])    
-}   
-
-model ProfileLanguages {    
-  userId                Int                       @map("user_id")
-  languageId            Int                       @map("language_id")
-  profile               Profile                   @relation(fields: [userId], references: [userId])
-  language              Language                  @relation(fields: [languageId], references: [id])
-  @@id([userId, languageId])          
-}         
-
-model ProfileTripDurations {            
-  userId                Int                       @map("user_id")
-  tripDurationId        Int                       @map("trip_duration_id")
-  profile               Profile                   @relation(fields: [userId], references: [userId])
-  tripDuration          TripDuration              @relation(fields: [tripDurationId], references: [id])
-  @@id([userId, tripDurationId])          
-}         
-
-model GroupTravelTypes {          
-  groupId               Int                       @map("group_id")
-  travelTypeId          Int                       @map("travel_type_id")
-  group                 Group                     @relation(fields: [groupId], references: [id])
-  travelType            TravelType                @relation(fields: [travelTypeId], references: [id])
-  @@id([groupId, travelTypeId])         
-}         
-
-model GroupLodgings {         
-  groupId               Int                       @map("group_id")
-  lodgingId             Int                       @map("lodging_id")
-  group                 Group                     @relation(fields: [groupId], references: [id])
-  lodging               Lodging                   @relation(fields: [lodgingId], references: [id])
-  @@id([groupId, lodgingId])          
-}         
-
-model GroupLanguages {          
-  groupId               Int                       @map("group_id")
-  languageId            Int                       @map("language_id")
-  group                 Group                     @relation(fields: [groupId], references: [id])
-  language              Language                  @relation(fields: [languageId], references: [id])
-  @@id([groupId, languageId])         
-}         
-
-model GroupAgeRanges {          
-  groupId               Int                       @map("group_id")
-  ageRangeId            Int                       @map("age_range_id")
-  group                 Group                     @relation(fields: [groupId], references: [id])
-  ageRange              AgeRange                  @relation(fields: [ageRangeId], references: [id])
-  @@id([groupId, ageRangeId])
+  id        Int        @id @default(autoincrement())
+  email     String     @unique @db.VarChar(100)
+  password  String     @db.VarChar(255)
+  status    UserStatus @default(NOT_VERIFIED)
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @updatedAt @map("updated_at")
+  profile   Profile?
+  tokens    Token[]
 }
 
-enum Gender {
+model Token {
+  userId    Int       @map("user_id")
+  token     String    @unique
+  type      TokenType
+  expiredAt DateTime  @map("expired_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, type])
+}
+
+model Profile {
+  userId              Int                    @id @map("user_id")
+  firstname           String                 @db.VarChar(30)
+  lastname            String                 @db.VarChar(30)
+  birthdate           String?                @db.VarChar(10)
+  gender              ProfileGender?         @default(NOT_SPECIFIED)
+  pathPicture         String?                @map("path_picture") @db.VarChar(255)
+  description         String?                @db.VarChar(2000)
+  budget              Budget?                @default(NOT_SPECIFIED)
+  availableFrom       String?                @map("available_from")
+  availableTo         String?                @map("available_to")
+  createdAt           DateTime               @default(now()) @map("created_at")
+  updatedAt           DateTime               @updatedAt @map("updated_at")
+  groups              GroupUser[]
+  medias              Media[]
+  messagesSent        Message[]              @relation("SenderUser")
+  messagesReceived    Message[]              @relation("ReceiverUser")
+  moderatingsReceived Moderating[]           @relation("ModeratedUser")
+  moderatingsGiven    Moderating[]           @relation("ModeraterUser")
+  notifications       Notification[]
+  user                User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  interests           ProfileInterests[]
+  languages           ProfileLanguages[]
+  lodgings            ProfileLodgings[]
+  travelTypes         ProfileTravelTypes[]
+  tripDurations       ProfileTripDurations[]
+  ratingsReceived     Rating[]               @relation("RatedUser")
+  ratingsGiven        Rating[]               @relation("RaterUser")
+}
+
+model Stage {
+  id          Int         @id @default(autoincrement())
+  title       String      @db.VarChar(100)
+  description String      @db.VarChar(2000)
+  dateFrom    String      @map("date_from")
+  dateTo      String      @map("date_to")
+  pathPicture String      @map("path_picture") @db.VarChar(255)
+  address     String      @db.VarChar(255)
+  longitude   Float
+  latitude    Float
+  groupId     Int         @map("group_id")
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+  checklist   Checklist[]
+  group       Group       @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@index([groupId], map: "Stage_group_id_fkey")
+}
+
+model Group {
+  id               Int                @id @default(autoincrement())
+  title            String             @db.VarChar(100)
+  description      String             @db.VarChar(2000)
+  location         String             @db.VarChar(255)
+  dateFrom         String             @map("date_from")
+  dateTo           String             @map("date_to")
+  pathPicture      String             @map("path_picture") @db.VarChar(255)
+  createdAt        DateTime           @default(now()) @map("created_at")
+  updatedAt        DateTime           @updatedAt @map("updated_at")
+  status           GroupStatus        @default(PENDING)
+  gender           GroupGender?       @default(MIXED)
+  budget           Budget?
+  checklist        Checklist[]
+  ageRanges        GroupAgeRanges[]
+  languages        GroupLanguages[]
+  lodgings         GroupLodgings[]
+  travelTypes      GroupTravelTypes[]
+  members          GroupUser[]
+  medias           Media[]
+  messagesReceived Message[]
+  stages           Stage[]
+}
+
+model GroupUser {
+  userId    Int             @map("user_id")
+  groupId   Int             @map("group_id")
+  role      GroupRole
+  status    GroupUserStatus
+  isInvited Boolean         @default(false) @map("is_invited")
+  createdAt DateTime        @default(now()) @map("created_at")
+  updatedAt DateTime        @updatedAt @map("updated_at")
+  group     Group           @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user      Profile         @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@id([userId, groupId])
+  @@index([groupId], map: "GroupUser_group_id_fkey")
+}
+
+model Notification {
+  id            Int                       @id @default(autoincrement())
+  userId        Int                       @map("user_id")
+  referenceId   Int                       @map("reference_id")
+  referenceType NotificationReferenceType @map("reference_type")
+  details       String                    @db.VarChar(255)
+  isRead        Boolean                   @default(false) @map("is_read")
+  createdAt     DateTime                  @default(now()) @map("created_at")
+  updatedAt     DateTime                  @updatedAt @map("updated_at")
+  user          Profile                   @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@index([userId], map: "Notification_user_id_fkey")
+}
+
+model Media {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  groupId   Int      @map("group_id")
+  alt       String   @db.VarChar(255)
+  path      String   @unique @db.VarChar(255)
+  createdAt DateTime @default(now()) @map("created_at")
+  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user      Profile  @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@index([groupId], map: "Media_group_id_fkey")
+  @@index([userId], map: "Media_user_id_fkey")
+}
+
+model Rating {
+  raterId   Int      @map("rater_id")
+  ratedId   Int      @map("rated_id")
+  value     Int
+  createdAt DateTime @default(now()) @map("created_at")
+  rated     Profile  @relation("RatedUser", fields: [ratedId], references: [userId], onDelete: Cascade)
+  rater     Profile  @relation("RaterUser", fields: [raterId], references: [userId], onDelete: Cascade)
+
+  @@id([raterId, ratedId])
+  @@index([ratedId], map: "Rating_rated_id_fkey")
+}
+
+model Moderating {
+  moderaterId Int      @map("moderater_id")
+  moderatedId Int      @map("moderated_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  moderated   Profile  @relation("ModeratedUser", fields: [moderatedId], references: [userId], onDelete: Cascade)
+  moderater   Profile  @relation("ModeraterUser", fields: [moderaterId], references: [userId], onDelete: Cascade)
+
+  @@id([moderaterId, moderatedId])
+  @@index([moderatedId], map: "Moderating_moderated_id_fkey")
+}
+
+model Message {
+  id              Int      @id @default(autoincrement())
+  content         String   @db.VarChar(1000)
+  senderId        Int      @map("sender_id")
+  userReceiverId  Int?     @map("user_receiver_id")
+  groupReceiverId Int?     @map("group_receiver_id")
+  createdAt       DateTime @default(now()) @map("created_at")
+  receiverGroup   Group?   @relation(fields: [groupReceiverId], references: [id], onDelete: Cascade)
+  senderUser      Profile  @relation("SenderUser", fields: [senderId], references: [userId], onDelete: Cascade)
+  receiverUser    Profile? @relation("ReceiverUser", fields: [userReceiverId], references: [userId], onDelete: Cascade)
+
+  @@index([groupReceiverId], map: "Message_group_receiver_id_fkey")
+  @@index([senderId], map: "Message_sender_id_fkey")
+  @@index([userReceiverId], map: "Message_user_receiver_id_fkey")
+}
+
+model Checklist {
+  id        Int      @id @default(autoincrement())
+  stageId   Int?     @map("stage_id")
+  groupId   Int?     @map("group_id")
+  item      String   @db.VarChar(50)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  group     Group?   @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  stage     Stage?   @relation(fields: [stageId], references: [id], onDelete: Cascade)
+
+  @@index([groupId], map: "Checklist_group_id_fkey")
+  @@index([stageId], map: "Checklist_stage_id_fkey")
+}
+
+model ProfileTravelTypes {
+  userId     Int         @map("user_id")
+  travelType TravelTypes
+  profile    Profile     @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@id([userId, travelType])
+}
+
+model ProfileLodgings {
+  userId  Int      @map("user_id")
+  lodging Lodgings
+  profile Profile  @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@id([userId, lodging])
+}
+
+model ProfileInterests {
+  userId   Int       @map("user_id")
+  interest Interests
+  profile  Profile   @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@id([userId, interest])
+}
+
+model ProfileLanguages {
+  userId   Int       @map("user_id")
+  language Languages
+  profile  Profile   @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@id([userId, language])
+}
+
+model ProfileTripDurations {
+  userId       Int           @map("user_id")
+  tripDuration TripDurations
+  profile      Profile       @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@id([userId, tripDuration])
+}
+
+model GroupTravelTypes {
+  groupId    Int         @map("group_id")
+  travelType TravelTypes
+  group      Group       @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@id([groupId, travelType])
+}
+
+model GroupLodgings {
+  groupId Int      @map("group_id")
+  lodging Lodgings
+  group   Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@id([groupId, lodging])
+}
+
+model GroupLanguages {
+  groupId  Int       @map("group_id")
+  language Languages
+  group    Group     @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@id([groupId, language])
+}
+
+model GroupAgeRanges {
+  groupId  Int       @map("group_id")
+  ageRange AgeRanges
+  group    Group     @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@id([groupId, ageRange])
+}
+
+enum TokenType {
+  REFRESH
+  VERIFICATION
+  RESET_PASSWORD
+}
+
+enum TravelTypes {
+  RELAXATION
+  ADVENTURE
+  CULTURAL
+  HIKING
+  BEACH
+  GASTRONOMIC
+  ROAD_TRIP
+  CRUISE
+  FAMILY_TRIP
+  FRIENDS_TRIP
+  ECO_FRIENDLY
+}
+
+enum Lodgings {
+  YOUTH_HOTEL
+  HOTEL
+  AIRBNB
+  CAMPING
+  ECOLODGE
+  LUXURY
+}
+
+enum Interests {
+  ADVENTURE_SPORTS
+  CULTURAL_ARTS
+  GASTRONOMIC
+  NATURE
+  WELLNESS
+  PARTY
+  AMUSEMENT_PARK
+  BOARD_GAMES
+  TECHNOLOGIES
+  HISTORY
+  WATER_ACTIVITIES
+  SHOPPING
+  FAMILY_ACTIVITIES
+}
+
+enum Languages {
+  FRENCH
+  ENGLISH
+  SPANISH
+  PORTUGUESE
+  ARABIC
+  ITALIAN
+  JAPANESE
+  MANDARIN
+  DEUTSCH
+  DUTCH
+  RUSSIAN
+  HINDI
+  GREEK
+}
+
+enum TripDurations {
+  SHORT_TRIP
+  MEDIUM_TRIP
+  LONG_TRIP
+}
+
+enum AgeRanges {
+  FIRST_AGE_RANGE
+  SECOND_AGE_RANGE
+  THIRD_AGE_RANGE
+  FOURTH_AGE_RANGE
+}
+
+enum ProfileGender {
   MALE
   FEMALE
   OTHER
+  NOT_SPECIFIED
 }
 
 enum Budget {
@@ -285,12 +357,19 @@ enum Budget {
   MIDDLE
   HIGH
   LUXURY
+  NOT_SPECIFIED
 }
 
 enum UserStatus {
   NOT_VERIFIED
   VERIFIED
   BANNED
+}
+
+enum GroupUserStatus {
+  PENDING
+  ACCEPTED
+  DENIED
 }
 
 enum GroupStatus {
@@ -305,15 +384,21 @@ enum GroupRole {
   AUTHOR
 }
 
-enum GenderType {
+enum GroupGender {
   MALE
   FEMALE
   OTHER
   MIXED
 }
 
-enum ReferenceType {
+enum NotificationReferenceType {
   PRIVATE_MESSAGE
   GROUP_MESSAGE
   GROUP_MODIFICATION
+  GROUP_DELETE
+  GROUP_INVITATION
+  GROUP_STATUS_UPDATE
+  GROUP_ROLE_UPDATE
+  GROUP_REQUEST
+  GROUP_NEW_MEMBER
 }
